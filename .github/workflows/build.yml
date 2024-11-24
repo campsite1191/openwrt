@@ -89,8 +89,8 @@ jobs:
 
       - name: Add SmartDNS Package
         run: |
-          # Copy the Makefile from the custom_repo to the target location
-          echo "Copying Makefile from custom_repo to feeds/packages/net/smartdns"
+          echo "Copying Makefile for SmartDNS"
+          # Copy the Makefile from custom_repo to the target location
           cp custom_repo/feeds/packages/net/smartdns/Makefile feeds/packages/net/smartdns/Makefile
 
       - name: Configure Firmware Image
