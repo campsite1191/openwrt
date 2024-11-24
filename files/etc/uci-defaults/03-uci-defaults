@@ -1,0 +1,35 @@
+#!/bin/sh
+# Exit if the timezone is already set to "America/New York"
+[ "$(uci -q get system.@system[0].zonename)" = "America/Los Angeles" ] && exit 0
+
+# This script will be placed in /rom/etc/uci-defaults/ as part of the image.
+
+# Default WLAN settings
+wlan_name="OpenWrt"
+wlan_password="OpenWrt2025"
+
+# Redirect stdout and stderr to a log file for debugging
+exec >/tmp/setup.log 2>&1
+
+# Configure WLAN if both name and password are valid
+if [ -n "$wlan_name" ] && [ -n "$wlan_password" ] && [ ${#wlan_password} -ge 8 ]; then
+  echo "Configuring WLAN..."
+  
+  # Ensure Wi-Fi is enabled
+  uci set wireless.@wifi-device[0].disabled='0'
+  uci set wireless.@wifi-iface[0].disabled='0'
+  
+  # Set Wi-Fi encryption, SSID, and password
+  uci set wireless.@wifi-iface[0].encryption='psk2'
+  uci set wireless.@wifi-iface[0].ssid="$wlan_name"
+  uci set wireless.@wifi-iface[0].key="$wlan_password"
+  
+  # Commit the wireless configuration
+  uci commit wireless
+  
+  echo "WLAN configuration applied successfully."
+else
+  echo "Skipping WLAN configuration: Invalid SSID or password."
+fi
+
+echo "Setup complete!"
