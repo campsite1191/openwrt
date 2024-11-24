@@ -73,6 +73,20 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
+      - name: Add AmneziaWG Packages
+        run: |
+          # Clone the package repository
+          git clone https://github.com/amnezia-vpn/amneziawg-openwrt.git package-temp
+          
+          # Explicitly move each package to its respective location
+          echo "Adding the following packages: amneziawg-tools, kmod-amneziawg, luci-proto-amneziawg"
+          mv package-temp/amneziawg-tools package/amneziawg-tools          
+          mv package-temp/kmod-amneziawg package/kmod-amneziawg
+          mv package-temp/luci-proto-amneziawg package/luci-proto-amneziawg
+          
+          # Clean up temporary directory
+          rm -rf package-temp
+
       - name: Configure Firmware Image
         run: |
           mv custom_repo/${{ env.CONFIG_FILE }} .config
