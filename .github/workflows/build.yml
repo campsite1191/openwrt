@@ -105,11 +105,8 @@ jobs:
         run: |
           cp -r custom_repo/${{ env.CUSTOM_FILES_PATH }} ./
 
-      - name: Download Build Dependencies
-        run: make download V=s -j$(nproc)
-
       - name: Build Firmware Image
-        run: make world -j$(nproc)
+        run: make -j$(nproc)
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
