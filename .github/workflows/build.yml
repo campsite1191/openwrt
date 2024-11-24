@@ -87,6 +87,12 @@ jobs:
           # Clean up temporary directory
           rm -rf package-temp
 
+      - name: Add SmartDNS Package
+        run: |
+          # Clone the SmartDNS package repository directly into the target location
+          echo "Cloning and adding SmartDNS package"
+          git clone https://github.com/pymumu/smartdns.git package/smartdns
+
       - name: Configure Firmware Image
         run: |
           mv custom_repo/${{ env.CONFIG_FILE }} .config
