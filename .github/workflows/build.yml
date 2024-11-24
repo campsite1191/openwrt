@@ -77,7 +77,7 @@ jobs:
         run: |
           echo "Cloning and adding AmneziaWG packages"
           # Clone the AmneziaWG package repository
-          git clone https://github.com/amnezia-vpn/amneziawg-openwrt.git package/amneziawg-openwrt
+          git clone https://github.com/this-username-has-been-taken/amneziawg-openwrt.git package/amneziawg-openwrt
 
           # Move the required packages from the cloned repository to their respective locations
           mv package/amneziawg-openwrt/amneziawg-tools package/amneziawg-tools
