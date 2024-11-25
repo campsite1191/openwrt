@@ -20,7 +20,7 @@ env:
 jobs:
   check_commits:
     name: Check for New Commits
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       new_commits: ${{ steps.check_new_commits.outputs.new_commits }}
       latest_commit_sha: ${{ steps.check_new_commits.outputs.latest_commit_sha }}
@@ -47,7 +47,7 @@ jobs:
     name: Build OpenWrt Firmware
     needs: check_commits
     if: needs.check_commits.outputs.new_commits == 'true' || needs.check_commits.outputs.nss_packages_repo_new_commits == 'true' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Install Build Dependencies
         run: |
@@ -105,8 +105,11 @@ jobs:
         run: |
           cp -r custom_repo/${{ env.CUSTOM_FILES_PATH }} ./
           
-      - name: Download Build Dependencies and Build Firmware Image
-        run: make download world V=s -j$(($(nproc)+1))
+      - name: Download Build Dependencies
+        run: make download V=s -j$(($(nproc)+1))
+
+      - name: Build Firmware Image
+        run: make world -j$(($(nproc)+1))
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
@@ -118,7 +121,7 @@ jobs:
     name: Create a New Release
     needs: [build, check_commits]
     if: needs.build.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Download Build Artifacts
         uses: actions/download-artifact@v4
