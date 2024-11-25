@@ -147,7 +147,7 @@ jobs:
             NSS Packages Commit: ${{ needs.check_commits.outputs.nss_packages_repo_latest_commit_sha }}
 
       - name: Clean Up Old Releases
-        uses: dev-drprasad/delete-older-releases@v1
+        uses: dev-drprasad/delete-older-releases@master
         with:
           keep_latest: 2
           delete_tags: true
