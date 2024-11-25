@@ -109,7 +109,7 @@ jobs:
         run: make download V=s -j$(($(nproc)+1))
 
       - name: Build Firmware Image
-        run: make world -j$(($(nproc)+1))
+        run: make world V=s -j$(($(nproc)+1))
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
