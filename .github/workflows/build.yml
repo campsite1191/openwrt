@@ -89,9 +89,14 @@ jobs:
 
       - name: Add SmartDNS Package
         run: |
-          echo "Copying Makefile for SmartDNS"
-          # Copy the Makefile from custom_repo to the target location
-          cp custom_repo/feeds/packages/net/smartdns/Makefile feeds/packages/net/smartdns/Makefile
+          # Remove the default smartdns package from the feed
+          rm -rf feeds/packages/net/smartdns
+
+          # Clone the desired smartdns version
+          git clone https://github.com/pymumu/smartdns.git feeds/packages/net/smartdns
+
+          # Verify the package has been added
+          ls -l feeds/packages/net/smartdns
 
       - name: Configure Firmware Image
         run: |
