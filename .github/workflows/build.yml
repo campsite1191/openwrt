@@ -20,7 +20,7 @@ env:
 jobs:
   check_commits:
     name: Check for New Commits
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       new_commits: ${{ steps.check_new_commits.outputs.new_commits }}
       latest_commit_sha: ${{ steps.check_new_commits.outputs.latest_commit_sha }}
@@ -47,7 +47,7 @@ jobs:
     name: Build OpenWrt Firmware
     needs: check_commits
     if: needs.check_commits.outputs.new_commits == 'true' || needs.check_commits.outputs.nss_packages_repo_new_commits == 'true' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: Install Build Dependencies
         run: |
@@ -87,16 +87,22 @@ jobs:
           # Clean up the cloned repository
           rm -rf package/amneziawg-openwrt
 
-      - name: Add SmartDNS Package
+      - name: Update and Add SmartDNS Package
         run: |
-          # Remove the default smartdns package from the feed
-          rm -rf feeds/packages/net/smartdns
-
-          # Clone the desired smartdns version
-          git clone https://github.com/pymumu/smartdns.git feeds/packages/net/smartdns
-
-          # Verify the package has been added
-          ls -l feeds/packages/net/smartdns
+          echo "Updating SmartDNS Makefile with the latest commit hash"
+      
+          # Get the latest commit hash from the main branch
+          LATEST_COMMIT=$(git ls-remote https://github.com/pymumu/smartdns.git refs/heads/main | cut -f1)
+      
+          # Update the Makefile by replacing the old PKG_SOURCE_VERSION
+          sed -i "s/^PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$LATEST_COMMIT/" custom_repo/feeds/packages/net/smartdns/Makefile
+      
+          # Copy the updated Makefile to the target location
+          cp custom_repo/feeds/packages/net/smartdns/Makefile feeds/packages/net/smartdns/Makefile
+      
+          # Display the updated Makefile for verification
+          echo "Updated Makefile:"
+          cat feeds/packages/net/smartdns/Makefile
 
       - name: Configure Firmware Image
         run: |
@@ -110,11 +116,8 @@ jobs:
         run: |
           cp -r custom_repo/${{ env.CUSTOM_FILES_PATH }} ./
           
-      - name: Download Build Dependencies
-        run: make download V=s -j$(($(nproc)+1))
-
-      - name: Build Firmware Image
-        run: make world V=s -j$(($(nproc)+1))
+      - name: Download Dependencies and Build Firmware
+        run: make -j$(($(nproc)+1)) V=s download world
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
@@ -126,7 +129,7 @@ jobs:
     name: Create a New Release
     needs: [build, check_commits]
     if: needs.build.result == 'success'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: Download Build Artifacts
         uses: actions/download-artifact@v4
