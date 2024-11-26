@@ -35,6 +35,10 @@ jobs:
           echo "new_commits=$([[ "$latest_commit_sha" != "$last_built_commit_sha" ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
           echo "latest_commit_sha=$latest_commit_sha" >> $GITHUB_OUTPUT
 
+          # Debugging
+          echo "Latest Commit SHA: $latest_commit_sha"
+          echo "Last Built Commit SHA: $last_built_commit_sha"
+
       - name: Check for New Commits in NSS Packages Repository
         id: check_nss_packages_repo_new_commits
         run: |
@@ -42,6 +46,10 @@ jobs:
           nss_packages_repo_last_built_commit_sha=$(curl -sL "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.body' | grep -oP 'NSS Packages Commit: \K\w+' || echo '')
           echo "new_commits=$([[ "$nss_packages_repo_latest_commit_sha" != "$nss_packages_repo_last_built_commit_sha" ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
           echo "latest_commit_sha=$nss_packages_repo_latest_commit_sha" >> $GITHUB_OUTPUT
+          
+          # Debugging
+          echo "Latest Commit SHA: $nss_packages_repo_latest_commit_sha"
+          echo "Last Built Commit SHA: $nss_packages_repo_last_built_commit_sha"
 
   build:
     name: Build OpenWrt Firmware
