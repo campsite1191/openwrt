@@ -51,7 +51,7 @@ jobs:
     steps:
       - name: Install Build Dependencies
         run: |
-          sudo apt update
+          sudo apt update && sudo apt full-upgrade -y
           sudo apt install -y \
             build-essential clang flex bison g++ gawk gcc-multilib g++-multilib \
             gettext git libncurses5-dev libssl-dev python3-setuptools rsync \
@@ -72,6 +72,14 @@ jobs:
         run: |
           ./scripts/feeds update -a
           ./scripts/feeds install -a
+
+      - name: Update qcom,ath11k-calibration-variant in DTS file
+        run: |
+          FILE=target/linux/qualcommax/files/arch/arm64/boot/dts/qcom/ipq8174-mx4300.dts
+          grep -q 'qcom,ath11k-calibration-variant = "Linksys-MX4200v1";' $FILE || \
+          sed -i 's/qcom,ath11k-calibration-variant = "Linksys-MX4200v2";/qcom,ath11k-calibration-variant = "Linksys-MX4200v1";/' $FILE
+          echo "Updated DTS file:"
+          cat $FILE
 
       - name: Add AmneziaWG Packages
         run: |
