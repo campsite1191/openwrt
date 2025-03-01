@@ -10,7 +10,7 @@ on:
 
 env:
   REMOTE_REPOSITORY: qosmio/openwrt-ipq
-  REMOTE_BRANCH: 24.10-nss-mx4300
+  REMOTE_BRANCH: 24.10-nss
   CONFIG_FILE: mx4300.config
   CUSTOM_FILES_PATH: files/
   RELEASE_PREFIX: nss
@@ -80,14 +80,6 @@ jobs:
         run: |
           ./scripts/feeds update -a
           ./scripts/feeds install -a
-
-      - name: Update qcom,ath11k-calibration-variant in DTS file
-        run: |
-          FILE=target/linux/qualcommax/files/arch/arm64/boot/dts/qcom/ipq8174-mx4300.dts
-          grep -q 'qcom,ath11k-calibration-variant = "Linksys-MX4200v1";' $FILE || \
-          sed -i 's/qcom,ath11k-calibration-variant = "Linksys-MX4200v2";/qcom,ath11k-calibration-variant = "Linksys-MX4200v1";/' $FILE
-          echo "Updated DTS file:"
-          cat $FILE
 
       - name: Add AmneziaWG Packages
         run: |
