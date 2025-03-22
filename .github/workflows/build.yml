@@ -65,6 +65,23 @@ jobs:
             gettext git libncurses5-dev libssl-dev python3-setuptools rsync \
             swig unzip zlib1g-dev file wget mold
 
+      - name: Enable ccache
+        run: |
+          export CCACHE_DIR=$HOME/.ccache
+          export CC="ccache gcc"
+          export CXX="ccache g++"
+          export CCACHE_MAXSIZE=450M  # Set max cache size to 450MB
+          export CCACHE_SLOPPINESS=time_macros
+          ccache -s  # Display the current state of the cache
+
+      - name: Cache ccache
+        uses: actions/cache@v3
+        with:
+          path: $HOME/.ccache
+          key: ${{ runner.os }}-ccache-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
       - name: Checkout Remote Repository
         uses: actions/checkout@v4
         with:
