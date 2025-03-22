@@ -110,9 +110,6 @@ jobs:
           mv custom_repo/${{ env.CONFIG_FILE }} .config
           make defconfig -j1
 
-      - name: Add Additional Configuration
-        run: echo "CONFIG_RELR=y" >> target/linux/qualcommax/config-6.6
-
       - name: Include Custom Files
         run: |
           cp -r custom_repo/${{ env.CUSTOM_FILES_PATH }} ./
@@ -151,7 +148,6 @@ jobs:
           tag_name: ${{ env.RELEASE_PREFIX }}-${{ env.RELEASE_DATE }}
           name: Updated Prebuilt Images ${{ env.RELEASE_DATE }}
           body: |
-            Updated prebuilt images for ${{ env.RELEASE_DATE }}
             Build Commit: ${{ needs.check_commits.outputs.latest_commit_sha }}
             NSS Packages Commit: ${{ needs.check_commits.outputs.nss_packages_repo_latest_commit_sha }}
 
