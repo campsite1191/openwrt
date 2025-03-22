@@ -68,16 +68,15 @@ jobs:
           export CC="ccache gcc"
           export CXX="ccache g++"
           export CCACHE_MAXSIZE=450M  # Set max cache size to 450MB
-          export CCACHE_SLOPPINESS=time_macros
           ccache -s  # Display the current state of the cache
 
       - name: Cache CCache
         uses: actions/cache@v3
         with:
           path: $HOME/.ccache
-          key: ${{ runner.os }}-ccache
+          key: ${{ runner.os }}-ccache-
           restore-keys: |
-            ${{ runner.os }}-ccache
+            ${{ runner.os }}-ccache-
 
       - name: Checkout Remote Repository
         uses: actions/checkout@v4
