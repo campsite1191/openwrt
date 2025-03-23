@@ -66,10 +66,9 @@ jobs:
         uses: actions/cache@master
         with:
           path: |
-            dl
-            build_dir
-            staging_dir
-            .ccache
+             dl
+             staging_dir/toolchain
+             .ccache
           key: ${{ runner.os }}-cache-
           restore-keys: |
             ${{ runner.os }}-cache-
