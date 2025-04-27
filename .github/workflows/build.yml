@@ -109,11 +109,10 @@ jobs:
           ./scripts/feeds install smartdns
 
       - name: Update OpenSSL
-        working-directory: feeds/packages/libs/openssl
         run: |
           echo "Overwriting OpenSSL Makefile variables…"
-          sed -i -E 's/^(PKG_VERSION:=).*/\13.5.0/' Makefile
-          sed -i -E 's/^(PKG_HASH:=).*/\1skip/' Makefile
+          sed -i -E 's/^(PKG_VERSION:=).*/\13.5.0/' feeds/packages/libs/openssl/Makefile
+          sed -i -E 's/^(PKG_HASH:=).*/\1skip/' feeds/packages/libs/openssl/Makefile
           cat feeds/packages/libs/openssl/Makefile
           ./scripts/feeds install openssl
 
