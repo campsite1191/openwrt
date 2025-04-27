@@ -106,6 +106,16 @@ jobs:
           sed -i "s/^PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$LATEST_COMMIT/" custom_repo/feeds/packages/net/smartdns/Makefile
           cp custom_repo/feeds/packages/net/smartdns/Makefile feeds/packages/net/smartdns/Makefile
           cat feeds/packages/net/smartdns/Makefile
+          ./scripts/feeds install smartdns
+
+      - name: Update OpenSSL
+        working-directory: feeds/packages/libs/openssl
+        run: |
+          echo "Overwriting OpenSSL Makefile variables…"
+          sed -i -E 's/^(PKG_VERSION:=).*/\13.5.0/' Makefile
+          sed -i -E 's/^(PKG_HASH:=).*/\1skip/' Makefile
+          cat feeds/packages/libs/openssl/Makefile
+          ./scripts/feeds install openssl
 
       - name: Configure Firmware Image
         run: |
