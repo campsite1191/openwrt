@@ -109,7 +109,7 @@ jobs:
 
       - name: Update OpenSSL
         run: |
-           sed -i -E 's/^(PKG_VERSION:=).*/\13.2.0/' package/libs/openssl/Makefile
+           sed -i -E 's/^(PKG_VERSION:=).*/\13.2.4/' package/libs/openssl/Makefile
            sed -i -E 's/^(PKG_HASH:=).*/\1skip/' package/libs/openssl/Makefile
            cat package/libs/openssl/Makefile
 
