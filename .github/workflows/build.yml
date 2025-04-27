@@ -103,6 +103,7 @@ jobs:
           LATEST_COMMIT=$(git ls-remote https://github.com/pymumu/smartdns.git refs/heads/master | cut -f1)
           [ -z "$LATEST_COMMIT" ] && { echo "Failed to fetch commit hash"; exit 1; }
           echo "Latest commit: $LATEST_COMMIT"
+          sed -i -E "s/^(PKG_VERSION:=).*/\11.0.0/" feeds/packages/net/smartdns/Makefile
           sed -i -E "s/^(PKG_SOURCE_VERSION:=).*/\1$LATEST_COMMIT/" feeds/packages/net/smartdns/Makefile
           sed -i -E 's/^(PKG_MIRROR_HASH:=).*/\1skip/' feeds/packages/net/smartdns/Makefile
           cat feeds/packages/net/smartdns/Makefile
