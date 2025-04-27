@@ -106,11 +106,12 @@ jobs:
           sed -i "s/^PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$LATEST_COMMIT/" custom_repo/feeds/packages/net/smartdns/Makefile
           cp custom_repo/feeds/packages/net/smartdns/Makefile feeds/packages/net/smartdns/Makefile
           cat feeds/packages/net/smartdns/Makefile
-          ./scripts/feeds install smartdns
 
       - name: Update OpenSSL
         run: |
-          cat package/libs/openssl/Makefile
+           sed -i -E 's/^(PKG_VERSION:=).*/\13.2.0/' package/libs/openssl/Makefile
+           sed -i -E 's/^(PKG_HASH:=).*/\1skip/' package/libs/openssl/Makefile
+           cat package/libs/openssl/Makefile
 
       - name: Configure Firmware Image
         run: |
