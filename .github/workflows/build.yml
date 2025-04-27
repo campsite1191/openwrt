@@ -3,10 +3,13 @@ name: Build OpenWrt for Specific Target and Release
 on:
   workflow_dispatch: # Manual trigger
   push: # Trigger on push events to specific branches
-    branches:
-      - main # Only respond to changes in the main branch
+    branches: [ main ]
   schedule: # Scheduled daily trigger at 12 AM Pacific Time (8 AM UTC)
     - cron: "0 8 * * *"
+
+concurrency:
+  group: build-openwrt-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   REMOTE_REPOSITORY: qosmio/openwrt-ipq
@@ -65,12 +68,14 @@ jobs:
       - name: Checkout Remote Repository
         uses: actions/checkout@master
         with:
+          fetch-depth: 1
           repository: ${{ env.REMOTE_REPOSITORY }}
           ref: ${{ env.REMOTE_BRANCH }}
 
       - name: Checkout Current Repository
         uses: actions/checkout@master
         with:
+          fetch-depth: 1
           path: "custom_repo"
 
       - name: Initialize Feeds
@@ -123,8 +128,11 @@ jobs:
         run: |
           cp -r custom_repo/${{ env.CUSTOM_FILES_PATH }} ./
           
-      - name: Download Dependencies and Build Firmware
-        run: make -j$(($(nproc)+1)) V=s download world
+      - name: Download Dependencies
+        run: make -j${{ runner.cpu }} download
+
+      - name: Build Firmware
+        run: make -j${{ runner.cpu }} V=s world
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@master
