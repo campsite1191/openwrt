@@ -121,7 +121,7 @@ jobs:
       - name: Configure Firmware Image
         run: |
           mv custom_repo/${{ env.CONFIG_FILE }} .config
-          make defconfig -j1
+          make defconfig
 
       - name: Include Custom Files
         run: |
