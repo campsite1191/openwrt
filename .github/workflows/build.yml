@@ -73,10 +73,13 @@ jobs:
         with:
           path: "custom_repo"
 
-      - name: Update and Install Feeds
+      - name: Initialize Feeds
         run: |
           ./scripts/feeds update -a
           ./scripts/feeds install -a
+
+      - name: Refresh Feeds
+        run: |
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
