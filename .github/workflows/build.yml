@@ -9,7 +9,7 @@ on:
 
 concurrency:
   group: build-openwrt-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   REMOTE_REPOSITORY: qosmio/openwrt-ipq
@@ -128,10 +128,10 @@ jobs:
           cp -r custom_repo/${{ env.CUSTOM_FILES_PATH }} ./
           
       - name: Download Dependencies
-        run: make -j${{ runner.cpu }} download
+        run: make j"$(nproc)" download
 
       - name: Build Firmware
-        run: make -j${{ runner.cpu }} V=s world
+        run: make j"$(nproc)" V=s world
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@master
