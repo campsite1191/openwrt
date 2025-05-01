@@ -128,10 +128,10 @@ jobs:
           cp -r custom_repo/${{ env.CUSTOM_FILES_PATH }} ./
           
       - name: Download Dependencies
-        run: make -j$($(nproc)) download
+        run: make -j$(nproc) download
 
       - name: Build Firmware
-        run: make -j$($(nproc)) V=s world
+        run: make -j$(nproc) V=s world
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@master
