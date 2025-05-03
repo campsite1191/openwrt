@@ -75,6 +75,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cache-
 
+      - name: List files recursively
+        run: ls -R .
+
       - name: Checkout Remote Repository
         uses: actions/checkout@master
         with:
