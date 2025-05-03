@@ -130,6 +130,10 @@ jobs:
           mv custom_repo/${{ env.CONFIG_FILE }} .config
           make defconfig
 
+      - name: Print .config
+        run: |
+          cat .config
+
       - name: Include Custom Files
         run: |
           cp -r custom_repo/${{ env.CUSTOM_FILES_PATH }} ./
