@@ -107,7 +107,7 @@ jobs:
           echo "Fetching the latest SmartDNS commit hash"
           LATEST_COMMIT=$(git ls-remote https://github.com/pymumu/smartdns.git refs/heads/master | cut -f1)
           [ -z "$LATEST_COMMIT" ] && { echo "Failed to fetch commit hash"; exit 1; }
-          curl -fsSL https://raw.githubusercontent.com/pymumu/smartdns/master/package/openwrt/Makefile -o feeds/packages/net/smartdns/Makefile
+          # curl -fsSL https://raw.githubusercontent.com/pymumu/smartdns/master/package/openwrt/Makefile -o feeds/packages/net/smartdns/Makefile
           sed -i -E "s/^(PKG_SOURCE_VERSION:=).*/\1$LATEST_COMMIT/" feeds/packages/net/smartdns/Makefile
           cat feeds/packages/net/smartdns/Makefile
 
