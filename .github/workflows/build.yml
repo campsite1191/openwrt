@@ -5,7 +5,7 @@ on:
   push: # Trigger on push events to specific branches
     branches: [ main ]
   schedule: # Scheduled daily trigger at 12 AM Pacific Time (8 AM UTC)
-    - cron: "0 8 * * *"
+    - cron: "1 0 * * *"
 
 concurrency:
   group: build-openwrt-${{ github.ref }}
