@@ -121,7 +121,7 @@ jobs:
 
       - name: Configure Firmware Image
         run: |
-          mv custom_repo/${{ env.CONFIG_FILE }} .config
+          mv custom_repo/mx4300.config .config
           make defconfig
 
       - name: Print .config
