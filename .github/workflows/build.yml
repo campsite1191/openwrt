@@ -14,7 +14,6 @@ concurrency:
 env:
   REMOTE_REPOSITORY: qosmio/openwrt-ipq
   REMOTE_BRANCH: main-nss
-  CONFIG_FILE: mx4300.config
   CUSTOM_FILES_PATH: files/
   RELEASE_PREFIX: nss
   NSS_PACKAGES_REPOSITORY: qosmio/nss-packages
