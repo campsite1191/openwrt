@@ -114,7 +114,7 @@ jobs:
       - name: Update and Add SmartDNS Web UI Package
         run: |
           echo "Fetching the latest SmartDNS Web UI commit hash"
-          LATEST_COMMIT=$(git ls-remote https://github.com/pymumu/smartdns-webui.git refs/heads/master | cut -f1)
+          LATEST_COMMIT=$(git ls-remote https://github.com/pymumu/smartdns-webui.git refs/heads/main | cut -f1)
           [ -z "$LATEST_COMMIT" ] && { echo "Failed to fetch commit hash"; exit 1; }
           sed -i -E "s/^(SMARTDNS_WEBUI_SOURCE_VERSION:=).*/\1$LATEST_COMMIT/" feeds/packages/net/smartdns/Makefile
           cat feeds/packages/net/smartdns/Makefile
