@@ -121,7 +121,7 @@ jobs:
       - name: Configure Firmware Image
         run: |
           mv custom_repo/mx4300.config .config
-          make defconfig
+          make defconfig V=s
 
       - name: Print .config
         run: |
