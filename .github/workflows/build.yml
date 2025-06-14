@@ -133,10 +133,10 @@ jobs:
         run: ls -R .
 
       - name: Download Dependencies
-        run: make -j$(($(nproc)+1)) V=s download
+        run: make -j8 V=s download
 
       - name: Build Firmware
-        run: make -j$(($(nproc)+1)) V=sc world
+        run: make -j8 V=sc world
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@master
