@@ -136,7 +136,7 @@ jobs:
         run: make -j$(($(nproc)+1)) V=s download
 
       - name: Build Firmware
-        run: make -j$(($(nproc)+1)) V=s world
+        run: make -j$(($(nproc)+1)) V=sc world
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@master
