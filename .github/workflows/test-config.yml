@@ -2,8 +2,6 @@ name: Test OpenWrt Config
 
 on:
   workflow_dispatch: # Manual trigger
-  push: # Trigger on push events to specific branches
-    branches: [ main ]
 
 concurrency:
   group: build-openwrt-${{ github.ref }}
