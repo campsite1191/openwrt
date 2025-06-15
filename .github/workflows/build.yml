@@ -156,6 +156,9 @@ jobs:
         with:
           name: ipq807x-images
           path: firmware
+      
+      - name: Copy .config File
+        run: cp .config firmware/.config
 
       - name: Display File Structure
         run: ls -R firmware
@@ -166,9 +169,7 @@ jobs:
       - name: Publish Release
         uses: softprops/action-gh-release@master
         with:
-          files: |
-            firmware/*
-            .config
+          files: firmware/*
           tag_name: ${{ env.RELEASE_PREFIX }}-${{ env.RELEASE_DATE }}
           name: Updated Prebuilt Images ${{ env.RELEASE_DATE }}
           body: |
