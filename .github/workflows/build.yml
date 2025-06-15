@@ -69,10 +69,8 @@ jobs:
           repository: ${{ env.REMOTE_REPOSITORY }}
           ref: ${{ env.REMOTE_BRANCH }}
 
-      - name: Checkout Temporary Pull Request
-        run: gh pr checkout https://github.com/openwrt/openwrt/pull/19071 -f
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Apply Temporary Patch
+        run: git apply https://patch-diff.githubusercontent.com/raw/openwrt/openwrt/pull/19071.patch
 
       - name: Checkout Current Repository
         uses: actions/checkout@master
