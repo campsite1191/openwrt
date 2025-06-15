@@ -69,18 +69,18 @@ jobs:
           repository: ${{ env.REMOTE_REPOSITORY }}
           ref: ${{ env.REMOTE_BRANCH }}
 
+      - name: Checkout Temporary Pull Request
+        run: gh pr checkout 19071
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Checkout Current Repository
         uses: actions/checkout@master
         with:
           fetch-depth: 1
           path: "custom_repo"
 
-      - name: Initialize Feeds
-        run: |
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
-
-      - name: Refresh Feeds
+      - name: Update and Install Feeds
         run: |
           ./scripts/feeds update -a
           ./scripts/feeds install -a
