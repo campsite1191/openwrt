@@ -70,7 +70,7 @@ jobs:
           ref: ${{ env.REMOTE_BRANCH }}
 
       - name: Checkout Temporary Pull Request
-        run: gh pr checkout 19071
+        run: gh pr checkout https://github.com/openwrt/openwrt/pull/19071
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
