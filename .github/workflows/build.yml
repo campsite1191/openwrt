@@ -133,10 +133,10 @@ jobs:
         run: ls -R .
 
       - name: Download Dependencies
-        run: make -j8 V=s download
+        run: make -j$(($(nproc)+1)) V=sc download
 
       - name: Build Firmware
-        run: make -j8 V=sc world
+        run: make -j$(($(nproc)+1)) V=sc world
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@master
@@ -165,7 +165,9 @@ jobs:
       - name: Publish Release
         uses: softprops/action-gh-release@master
         with:
-          files: firmware/*
+          files: |
+            firmware/*
+            .config
           tag_name: ${{ env.RELEASE_PREFIX }}-${{ env.RELEASE_DATE }}
           name: Updated Prebuilt Images ${{ env.RELEASE_DATE }}
           body: |
