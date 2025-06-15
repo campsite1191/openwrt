@@ -142,7 +142,9 @@ jobs:
         uses: actions/upload-artifact@master
         with:
           name: ipq807x-images
-          path: bin/targets/qualcommax/ipq807x
+          path: |
+            bin/targets/qualcommax/ipq807x/
+            .config
 
   release:
     name: Create a New Release
