@@ -135,8 +135,8 @@ jobs:
       - name: Download Dependencies
         run: make -j$(($(nproc)+1)) V=sc download
 
-      # - name: Build Firmware
-      #   run: make -j$(($(nproc)+1)) V=sc world
+      - name: Build Firmware
+        run: make -j$(($(nproc)+1)) V=sc world
 
       - name: Copy .config File
         run: cp .config config.txt
