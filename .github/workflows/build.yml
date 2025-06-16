@@ -146,10 +146,10 @@ jobs:
         run: make -j$(($(nproc)+1)) V=sc world
 
       - name: Copy .config File
-        run: cp .config config.txt
+        run: cp .config bin/targets/qualcommax/ipq807x/config.txt
 
       - name: Copy Directory Structure
-        run: ls -R . > file_list.txt
+        run: ls -R . > bin/targets/qualcommax/ipq807x/file_list.txt
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@master
@@ -157,9 +157,7 @@ jobs:
           name: ipq807x-images
           path: |
             bin/targets/qualcommax/ipq807x/
-            config.txt
-            file_list.txt
-
+            
   release:
     name: Create a New Release
     needs: [build, check_commits]
@@ -181,7 +179,7 @@ jobs:
       - name: Publish Release
         uses: softprops/action-gh-release@master
         with:
-          files: firmware/**
+          files: firmware/*
           tag_name: ${{ env.RELEASE_DATE }}
           name: Updated Prebuilt Images ${{ env.RELEASE_DATE }}
           body: |
