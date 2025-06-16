@@ -138,6 +138,9 @@ jobs:
       - name: Build Firmware
         run: make -j$(($(nproc)+1)) V=sc world
 
+      - name: Copy .config File
+        run: cp .config config.txt
+
       - name: Copy Directory Structure
         run: ls -R . > file_list.txt
 
@@ -147,7 +150,7 @@ jobs:
           name: ipq807x-images
           path: |
             bin/targets/qualcommax/ipq807x/
-            .config
+            config.txt
             file_list.txt
 
   release:
