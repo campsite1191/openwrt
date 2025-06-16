@@ -119,6 +119,11 @@ jobs:
           sed -i -E "s/^(SMARTDNS_WEBUI_SOURCE_VERSION:=).*/\1$LATEST_COMMIT/" feeds/packages/net/smartdns/Makefile
           cat feeds/packages/net/smartdns/Makefile
 
+      - name: Update SmartDNS LuCI File
+        run: |
+          curl -L -o feeds/luci/applications/luci-app-smartdns/htdocs/luci-static/resources/view/smartdns/smartdns.js https://raw.githubusercontent.com/pymumu/smartdns/refs/heads/master/package/luci/files/root/www/luci-static/resources/view/smartdns/smartdns.js
+          curl -L -o feeds/luci/applications/luci-app-smartdns/root/usr/share/luci/menu.d/luci-app-smartdns.json https://raw.githubusercontent.com/pymumu/smartdns/refs/heads/master/package/luci/files/root/usr/share/luci/menu.d/luci-app-smartdns.json
+      
       - name: Configure Firmware Image
         run: |
           mv custom_repo/mx4300.config .config
