@@ -121,7 +121,9 @@ jobs:
 
       - name: Update SmartDNS LuCI File
         run: |
+          cat feeds/luci/applications/luci-app-smartdns/htdocs/luci-static/resources/view/smartdns/smartdns.js
           curl -L -o feeds/luci/applications/luci-app-smartdns/htdocs/luci-static/resources/view/smartdns/smartdns.js https://raw.githubusercontent.com/pymumu/smartdns/refs/heads/master/package/luci/files/root/www/luci-static/resources/view/smartdns/smartdns.js
+          cat feeds/luci/applications/luci-app-smartdns/root/usr/share/luci/menu.d/luci-app-smartdns.json
           curl -L -o feeds/luci/applications/luci-app-smartdns/root/usr/share/luci/menu.d/luci-app-smartdns.json https://raw.githubusercontent.com/pymumu/smartdns/refs/heads/master/package/luci/files/root/usr/share/luci/menu.d/luci-app-smartdns.json
       
       - name: Configure Firmware Image
