@@ -19,7 +19,7 @@ env:
 jobs:
   check_commits:
     name: Check for New Commits
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     outputs:
       new_commits: ${{ steps.check_new_commits.outputs.new_commits }}
       latest_commit_sha: ${{ steps.check_new_commits.outputs.latest_commit_sha }}
@@ -148,7 +148,7 @@ jobs:
           cp -r custom_repo/${{ env.CUSTOM_FILES_PATH }} ./
 
       - name: Download Dependencies
-        run: make -j$(($(nproc)+1)) V=sc download
+        run: make -j$(($(nproc)+1)) V=sc download prepare
 
       - name: Build Firmware
         run: make -j$(($(nproc)+1)) V=sc world
