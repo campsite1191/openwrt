@@ -148,7 +148,10 @@ jobs:
           cp -r custom_repo/${{ env.CUSTOM_FILES_PATH }} ./
 
       - name: Download Dependencies
-        run: make -j$(($(nproc)+1)) V=sc download prepare
+        run: make -j$(($(nproc)+1)) V=sc download
+
+      - name: Prepare Dependencies
+        run: make -j$(($(nproc)+1)) V=sc prepare
 
       - name: Build Firmware
         run: make -j$(($(nproc)+1)) V=sc world
