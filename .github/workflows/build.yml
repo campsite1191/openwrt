@@ -99,9 +99,7 @@ jobs:
           git clone https://github.com/this-username-has-been-taken/amneziawg-openwrt.git package/amneziawg-openwrt
 
           # Move the required packages from the cloned repository to their respective locations
-          mv package/amneziawg-openwrt/amneziawg-tools package/amneziawg-tools
-          mv package/amneziawg-openwrt/kmod-amneziawg package/kmod-amneziawg
-          mv package/amneziawg-openwrt/luci-proto-amneziawg package/luci-proto-amneziawg
+          mv package/amneziawg-openwrt/* package/
 
           # Clean up the cloned repository
           rm -rf package/amneziawg-openwrt
