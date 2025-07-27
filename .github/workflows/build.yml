@@ -86,15 +86,16 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
+          max-size: 2G
           key: ${{ runner.os }}-openwrt-ccache
 
       - name: Cache Toolchain
         uses: actions/cache@v4
         with:
           path: | 
-            openwrt/build_dir/**
-            openwrt/dl/**
-            openwrt/staging_dir/**
+            dl/**
+            build_dir/**
+            staging_dir/**
           key: ${{ runner.os }}-openwrt-toolchain
           restore-keys: |
             ${{ runner.os }}-openwrt-toolchain
