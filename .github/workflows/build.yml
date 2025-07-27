@@ -97,7 +97,10 @@ jobs:
           echo "Cloning and adding AmneziaWG packages"
           # Clone the AmneziaWG package repository
           git clone https://github.com/this-username-has-been-taken/amneziawg-openwrt.git package/amneziawg-openwrt
-
+          rm -rf package/amneziawg-openwrt/Makefile
+          sed -i 's#../../packages/lang/golang/golang-package.mk#../../../feeds/packages/lang/golang/golang-package.mk#g' package/amneziawg-openwrt/amneziawg-go/Makefile
+          cat package/amneziawg-openwrt/amneziawg-go/Makefile
+          
           # Move the required packages from the cloned repository to their respective locations
           # mv package/amneziawg-openwrt/amneziawg-tools package/amneziawg-tools
           # mv package/amneziawg-openwrt/kmod-amneziawg package/kmod-amneziawg
