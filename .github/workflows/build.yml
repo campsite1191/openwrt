@@ -83,6 +83,22 @@ jobs:
         with:
           check-latest: true
 
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}-openwrt-ccache
+
+      - name: Cache Toolchain
+        uses: actions/cache@v4
+        with:
+          path: | 
+            openwrt/build_dir/**
+            openwrt/dl/**
+            openwrt/staging_dir/**
+          key: ${{ runner.os }}-openwrt-toolchain
+          restore-keys: |
+            ${{ runner.os }}-openwrt-toolchain
+
       - name: Update and Install Feeds
         run: |
           ./scripts/feeds update -a
