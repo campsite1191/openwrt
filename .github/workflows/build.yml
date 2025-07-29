@@ -95,8 +95,6 @@ jobs:
         with:
           path: | 
             dl
-            build_dir/host
-            staging_dir
           key: ${{ runner.os }}-openwrt-toolchain
           restore-keys: |
             ${{ runner.os }}-openwrt-toolchain
@@ -106,7 +104,7 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Update Feeds
+      - name: Update and Install Feeds Again
         run: |
           ./scripts/feeds update -a
           ./scripts/feeds install -a
@@ -119,15 +117,6 @@ jobs:
           rm -rf package/amneziawg-openwrt/Makefile
           sed -i 's#../../packages/lang/golang/golang-package.mk#../../../feeds/packages/lang/golang/golang-package.mk#g' package/amneziawg-openwrt/amneziawg-go/Makefile
           cat package/amneziawg-openwrt/amneziawg-go/Makefile
-          
-          # Move the required packages from the cloned repository to their respective locations
-          # mv package/amneziawg-openwrt/amneziawg-tools package/amneziawg-tools
-          # mv package/amneziawg-openwrt/kmod-amneziawg package/kmod-amneziawg
-          # mv package/amneziawg-openwrt/luci-proto-amneziawg package/luci-proto-amneziawg
-          # mv package/amneziawg-openwrt/amneziawg-go package/amneziawg-go
-
-          # Clean up the cloned repository
-          # rm -rf package/amneziawg-openwrt
 
       - name: Update and Add SmartDNS Package
         run: |
