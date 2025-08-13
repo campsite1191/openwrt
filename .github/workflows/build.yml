@@ -105,10 +105,9 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Update and Install Feeds Again
+      - name: Update Feeds Again
         run: |
           ./scripts/feeds update -a
-          ./scripts/feeds install -a
 
       - name: Add AmneziaWG Packages
         run: |
@@ -148,7 +147,7 @@ jobs:
           curl -sL "${DOWNLOAD_URL}" | tar -xz -C "${TARGET_DIR}" --strip-components=1
           ls -R "${TARGET_DIR}"
 
-      - name: Install Feeds
+      - name: Install Feeds Again
         run: |
           ./scripts/feeds install -a
           
@@ -174,18 +173,18 @@ jobs:
       - name: Build Firmware
         run: make -j$(($(nproc)+1)) V=sc world
 
-      - name: Copy .config File
-        run: cp .config bin/targets/qualcommax/ipq807x/config.txt
-
-      - name: Copy Directory Structure
-        run: tree > bin/targets/qualcommax/ipq807x/file_list.txt
-
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@master
         with:
           name: ipq807x-images
           path: |
             bin/targets/qualcommax/ipq807x/
+
+      - name: Copy .config File
+        run: cp .config bin/targets/qualcommax/ipq807x/config.txt
+
+      - name: Copy Directory Structure
+        run: tree > bin/targets/qualcommax/ipq807x/file_list.txt
             
   release:
     name: Create a New Release
