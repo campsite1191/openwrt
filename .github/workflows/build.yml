@@ -19,7 +19,7 @@ env:
 jobs:
   check_commits:
     name: Check for New Commits
-    runs-on: ubuntu-latest-4-core
+    runs-on: ubuntu-latest
     outputs:
       new_commits: ${{ steps.check_new_commits.outputs.new_commits }}
       latest_commit_sha: ${{ steps.check_new_commits.outputs.latest_commit_sha }}
@@ -54,7 +54,7 @@ jobs:
     name: Build OpenWrt Firmware
     needs: check_commits
     if: needs.check_commits.outputs.new_commits == 'true' || needs.check_commits.outputs.nss_packages_repo_new_commits == 'true' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest-4-core
+    runs-on: ubuntu-latest
     steps:
       - name: Install Build Dependencies
         run: |
