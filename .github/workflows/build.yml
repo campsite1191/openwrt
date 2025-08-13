@@ -84,11 +84,11 @@ jobs:
         with:
           check-latest: true
 
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          max-size: 2G
-          key: ${{ runner.os }}-openwrt-ccache
+      # - name: Setup ccache
+      #   uses: hendrikmuhs/ccache-action@v1.2
+      #   with:
+      #     max-size: 2G
+      #     key: ${{ runner.os }}-openwrt-ccache
 
       # - name: Cache Toolchain
       #   uses: actions/cache@v4
