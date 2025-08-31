@@ -126,13 +126,14 @@ jobs:
           sed -i -E "s/^(PKG_SOURCE_VERSION:=).*/\1$LATEST_COMMIT/" feeds/packages/net/smartdns/Makefile
           cat feeds/packages/net/smartdns/Makefile
 
-      # - name: Update and Add SmartDNS Web UI Package
-      #   run: |
+      - name: Update and Add SmartDNS Web UI Package
+        run: |
+          sed -i "s/MIRROR_HASH:=.*/MIRROR_HASH:=skip/" feeds/packages/net/smartdns/Makefile          
+          cat feeds/packages/net/smartdns/Makefile
       #     echo "Fetching the latest SmartDNS Web UI commit hash"
       #     LATEST_COMMIT=$(git ls-remote https://github.com/pymumu/smartdns-webui.git refs/heads/main | cut -f1)
       #     [ -z "$LATEST_COMMIT" ] && { echo "Failed to fetch commit hash"; exit 1; }
       #     sed -i -E "s/^(SMARTDNS_WEBUI_SOURCE_VERSION:=).*/\1$LATEST_COMMIT/" feeds/packages/net/smartdns/Makefile
-      #     cat feeds/packages/net/smartdns/Makefile
 
       - name: Update SmartDNS LuCI File
         run: |
@@ -164,14 +165,14 @@ jobs:
           cp -r custom_repo/${{ env.CUSTOM_FILES_PATH }} ./
 
       - name: Download Dependencies
-        run: make -j$(($(nproc)+1)) V=sc download
+        run: make -j$(($(nproc)+1)) V=sc download PKG_HASH=skip
 
       - name: Prepare Dependencies
-        run: make -j$(($(nproc)+1)) V=sc prepare
+        run: make -j$(($(nproc)+1)) V=sc prepare PKG_HASH=skip
 
       - name: Build Firmware
         # run: make -j$(($(nproc)+1)) V=sc world
-        run: make -j1 V=sc world
+        run: make -j1 V=sc world PKG_HASH=skip
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@master
