@@ -170,7 +170,8 @@ jobs:
         run: make -j$(($(nproc)+1)) V=sc prepare
 
       - name: Build Firmware
-        run: make -j$(($(nproc)+1)) V=sc world
+        # run: make -j$(($(nproc)+1)) V=sc world
+        run: make -j1 V=sc world
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@master
