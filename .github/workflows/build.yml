@@ -108,10 +108,10 @@ jobs:
         run: |
           echo "Cloning and adding AmneziaWG packages"
           # Clone the AmneziaWG package repository
-          git clone https://github.com/this-username-has-been-taken/amneziawg-openwrt.git package
-          rm -rf package/Makefile
-          sed -i 's#../../packages/lang/golang/golang-package.mk#../../feeds/packages/lang/golang/golang-package.mk#g' package/amneziawg-go/Makefile
-          cat package/amneziawg-go/Makefile
+          git clone https://github.com/this-username-has-been-taken/amneziawg-openwrt.git package/amneziawg-openwrt
+          rm -rf package/amneziawg-openwrt/Makefile
+          sed -i 's#../../packages/lang/golang/golang-package.mk#../../../feeds/packages/lang/golang/golang-package.mk#g' package/amneziawg-openwrt/amneziawg-go/Makefile
+          cat package/amneziawg-openwrt/amneziawg-go/Makefile
 
       - name: Update and Add SmartDNS Package
         run: |
