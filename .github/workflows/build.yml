@@ -113,17 +113,19 @@ jobs:
         run: |
           echo "Cloning and adding AmneziaWG packages"
           # Clone the AmneziaWG package repository
-          git clone https://github.com/this-username-has-been-taken/amneziawg-openwrt.git package/amneziawg-openwrt
-          rm -rf package/amneziawg-openwrt/Makefile
-          sed -i 's#../../packages/lang/golang/golang-package.mk#../../../feeds/packages/lang/golang/golang-package.mk#g' package/amneziawg-openwrt/amneziawg-go/Makefile
-          cat package/amneziawg-openwrt/amneziawg-go/Makefile
+          git clone https://github.com/this-username-has-been-taken/amneziawg-openwrt.git package
+          rm -rf package/Makefile
+          sed -i 's#../../packages/lang/golang/golang-package.mk#../../feeds/packages/lang/golang/golang-package.mk#g' package/amneziawg-go/Makefile
+          cat package/amneziawg-go/Makefile
 
       - name: Update and Add SmartDNS Package
         run: |
           echo "Cloning and adding SmartDNS packages"
+          rm -rf feeds/packages/net/smartdns
           git clone https://github.com/pymumu/smartdns.git package/smartdns
           git clone https://github.com/pymumu/smartdns-webui.git package/smartdns-webui
-          rm -rf feeds/packages/net/smartdns
+          sed -i 's#../../lang/rust/rust-package.mk#../../feeds/packages/lang/rust/rust-package.mk#g' package/smartdns/Makefile
+          cat package/smartdns/Makefile
         
           # echo "Fetching the latest SmartDNS commit hash"
           # LATEST_COMMIT=$(git ls-remote https://github.com/pymumu/smartdns.git refs/heads/master | cut -f1)
