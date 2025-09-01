@@ -100,12 +100,7 @@ jobs:
       #     restore-keys: |
       #       ${{ runner.os }}-openwrt-toolchain
 
-      - name: Update and Install Feeds
-        run: |
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
-
-      - name: Update Feeds Again
+      - name: Update Feeds
         run: |
           ./scripts/feeds update -a
 
@@ -155,7 +150,7 @@ jobs:
           curl -sL "${DOWNLOAD_URL}" | tar -xz -C "${TARGET_DIR}" --strip-components=1
           ls -R "${TARGET_DIR}"
 
-      - name: Install Feeds Again
+      - name: Install Feeds
         run: |
           ./scripts/feeds install -a
           
