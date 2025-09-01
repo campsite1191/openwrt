@@ -36,12 +36,12 @@ jobs:
           ref: 'master'
 
       # 3. Sets up the Java Development Kit (JDK) environment
-      # The build instructions require JDK 14.
+      # The build instructions require JDK 14. Using 'zulu' distribution for better version availability.
       - name: Set up JDK 14
         uses: actions/setup-java@v4
         with:
           java-version: '14'
-          distribution: 'temurin'
+          distribution: 'zulu'
           cache: 'gradle'
 
       # 4. Grant execute permission for gradlew in the patched repo
