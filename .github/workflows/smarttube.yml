@@ -26,49 +26,42 @@ jobs:
         uses: actions/checkout@v4
 
       # 2. Checks-out the secondary repository you want to patch.
-      # Replace 'owner/repo-to-patch' with the actual repository owner and name.
-      # The 'path' property places it in a specific directory named 'source-repo'.
+      # This now checks out the specified repository and its submodules.
       - name: Checkout repository to patch
         uses: actions/checkout@v4
         with:
-          repository: 'yuliskov/SmartTube' # <-- IMPORTANT: CHANGE THIS
+          repository: 'yuliskov/SmartTube'
           path: 'source-repo'
+          submodules: 'recursive'
+          ref: 'master'
 
-      # 3. Apply patches to the checked-out source code.
-      # This assumes you have a directory named 'patches' in your primary repo
-      # containing your .patch files.
-      # - name: Apply patches
-      #   run: |
-      #     git apply --directory='source-repo' ./patches/your-first.patch
-      #     git apply --directory='source-repo' ./patches/your-second.patch
-        # Add more 'git apply' lines for each patch you have.
-
-      # 4. Sets up the Java Development Kit (JDK) environment
-      # Android builds often require a specific JDK version. Version 17 is common for modern Android development.
-      - name: Set up JDK 17
+      # 3. Sets up the Java Development Kit (JDK) environment
+      # The build instructions require JDK 14.
+      - name: Set up JDK 14
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '14'
           distribution: 'temurin'
           cache: 'gradle'
 
-      # 5. Grant execute permission for gradlew in the patched repo
+      # 4. Grant execute permission for gradlew in the patched repo
       # The Gradle wrapper script needs to be executable to run.
       - name: Make gradlew executable
         working-directory: ./source-repo # Run this command inside the patched repo's directory
         run: chmod +x ./gradlew
 
-      # 6. Run the Gradle build in the patched repo
-      # This command compiles the application and runs any unit tests.
+      # 5. Run the Gradle build in the patched repo
+      # This uses the specific build command provided in the instructions.
+      # 'assemble' is used instead of 'install' as it's suited for CI environments.
       - name: Build with Gradle
         working-directory: ./source-repo # Run this command inside the patched repo's directory
-        run: ./gradlew build
+        run: ./gradlew clean assembleStorigDebug
 
-      # 7. (Optional) Upload build artifact from the patched repo
-      # This step uploads the generated APK file from the build process.
+      # 6. (Optional) Upload build artifact from the patched repo
+      # The path has been updated to match the 'storigDebug' build variant.
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: debug-apk
-          path: source-repo/app/build/outputs/apk/debug/app-debug.apk
+          path: source-repo/app/build/outputs/apk/storig/debug/app-storig-debug.apk
 
