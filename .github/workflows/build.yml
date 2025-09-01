@@ -116,11 +116,15 @@ jobs:
       - name: Update and Add SmartDNS Package
         run: |
           echo "Cloning and adding SmartDNS packages"
+          
           rm -rf feeds/packages/net/smartdns
-          git clone https://github.com/pymumu/smartdns.git package/smartdns
-          git clone https://github.com/pymumu/smartdns-webui.git package/smartdns-webui
+          git clone https://github.com/pymumu/smartdns.git package/smartdns_repo
+          mv package/smartdns_repo/package/openwrt package/smartdns
+          rm -rf package/smartdns_repo
           sed -i 's#../../lang/rust/rust-package.mk#../../feeds/packages/lang/rust/rust-package.mk#g' package/smartdns/Makefile
           cat package/smartdns/Makefile
+          
+          git clone https://github.com/pymumu/smartdns-webui.git package/smartdns-webui
         
           # echo "Fetching the latest SmartDNS commit hash"
           # LATEST_COMMIT=$(git ls-remote https://github.com/pymumu/smartdns.git refs/heads/master | cut -f1)
