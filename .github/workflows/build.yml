@@ -73,6 +73,7 @@ jobs:
       - name: Apply Temporary Patch
         run: |
           curl -sL -o - https://patch-diff.githubusercontent.com/raw/openwrt/openwrt/pull/19071.patch | git apply -
+          curl -sL -o - https://patch-diff.githubusercontent.com/raw/openwrt/openwrt/pull/19766.patch | git apply -
 
       - name: Checkout Current Repository
         uses: actions/checkout@master
@@ -122,10 +123,9 @@ jobs:
           mv package/smartdns_repo/package/openwrt package/smartdns
           rm -rf package/smartdns_repo
           sed -i 's#../../lang/rust/rust-package.mk#../../feeds/packages/lang/rust/rust-package.mk#g' package/smartdns/Makefile
+          sed -i "s/MIRROR_HASH:=.*/MIRROR_HASH:=skip/" package/smartdns/Makefile          
           cat package/smartdns/Makefile
-          
-          git clone https://github.com/pymumu/smartdns-webui.git package/smartdns-webui
-        
+                  
           # echo "Fetching the latest SmartDNS commit hash"
           # LATEST_COMMIT=$(git ls-remote https://github.com/pymumu/smartdns.git refs/heads/master | cut -f1)
           # [ -z "$LATEST_COMMIT" ] && { echo "Failed to fetch commit hash"; exit 1; }
