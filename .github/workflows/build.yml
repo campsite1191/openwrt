@@ -174,8 +174,8 @@ jobs:
       - name: Copy .config File
         run: cp .config bin/targets/qualcommax/ipq807x/config.txt
 
-      - name: Copy Directory Structure
-        run: tree > bin/targets/qualcommax/ipq807x/file_list.txt
+      # - name: Copy Directory Structure
+      #   run: tree > bin/targets/qualcommax/ipq807x/file_list.txt
             
   release:
     name: Create a New Release
