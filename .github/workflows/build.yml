@@ -97,7 +97,7 @@ jobs:
           check-latest: true
 
       - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@master
+        uses: hendrikmuhs/ccache-action@v1.2.19
         with:
           key: ${{ runner.os }}-openwrt-ccache
           max-size: 10G
