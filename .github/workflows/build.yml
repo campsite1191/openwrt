@@ -90,17 +90,17 @@ jobs:
           path: "custom_repo"
 
       - name: Install Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6.0.0
         with:
           check-latest: true
 
       - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1.2.19
         with:
           key: ${{ runner.os }}-openwrt-ccache
 
       - name: Cache Toolchain
-        uses: actions/cache@v4
+        uses: actions/cache@v4.3.0
         with:
           path: | 
             dl
@@ -180,8 +180,8 @@ jobs:
       - name: Copy .config File
         run: cp .config bin/targets/qualcommax/ipq807x/config.txt
 
-      # - name: Copy Directory Structure
-      #   run: tree > bin/targets/qualcommax/ipq807x/file_list.txt
+      - name: Copy Directory Structure
+        run: tree > bin/targets/qualcommax/ipq807x/file_list.txt
             
   release:
     name: Create a New Release
@@ -190,7 +190,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6.0.0
         with:
           name: ipq807x-images
           path: firmware
