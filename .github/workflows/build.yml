@@ -89,10 +89,10 @@ jobs:
           fetch-depth: 1
           path: "custom_repo"
 
-      # - name: Install Go
-      #   uses: actions/setup-go@v5
-      #   with:
-      #     check-latest: true
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          check-latest: true
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
