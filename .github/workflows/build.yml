@@ -96,20 +96,20 @@ jobs:
           go-version: '1.25.x'
           check-latest: true
 
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2.19
-        with:
-          key: ${{ runner.os }}-openwrt-ccache
-          max-size: 10G
+      # - name: Setup ccache
+      #   uses: hendrikmuhs/ccache-action@v1.2.19
+      #   with:
+      #     key: ${{ runner.os }}-openwrt-ccache
+      #     max-size: 10G
 
-      - name: Cache Toolchain
-        uses: actions/cache@master
-        with:
-          path: | 
-            dl
-          key: ${{ runner.os }}-openwrt-toolchain
-          restore-keys: |
-            ${{ runner.os }}-openwrt-toolchain
+      # - name: Cache Toolchain
+      #   uses: actions/cache@master
+      #   with:
+      #     path: | 
+      #       dl
+      #     key: ${{ runner.os }}-openwrt-toolchain
+      #     restore-keys: |
+      #       ${{ runner.os }}-openwrt-toolchain
 
       - name: Update Feeds
         run: |
