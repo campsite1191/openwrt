@@ -69,7 +69,7 @@ jobs:
         run: |
           sudo apt update 
           sudo apt upgrade -y
-          sudo apt install -y build-essential clang flex bison g++-15 gawk gcc-15-multilib g++-15-multilib gettext git libncurses5-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev file wget mold tree ccache
+          sudo apt install -y build-essential clang flex bison g++-15 gawk gcc-15-multilib g++-15-multilib gettext git libncurses-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev file wget mold tree ccache
           # npm 
 
       - name: Checkout Remote Repository
