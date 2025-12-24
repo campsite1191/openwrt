@@ -114,6 +114,8 @@ jobs:
       - name: Update Feeds
         run: |
           echo "src-git qosmio https://github.com/qosmio/packages-extra" >> feeds.conf
+          ./scripts/feeds update qosmio
+          ./scripts/feeds install -a -p qosmio
           ./scripts/feeds update -a
 
       - name: Add AmneziaWG Packages
