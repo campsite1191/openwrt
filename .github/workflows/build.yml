@@ -113,9 +113,6 @@ jobs:
 
       - name: Update Feeds
         run: |
-          echo "src-git qosmio https://github.com/qosmio/packages-extra" >> feeds.conf
-          ./scripts/feeds update qosmio
-          ./scripts/feeds install -a -p qosmio
           ./scripts/feeds update -a
 
       - name: Add AmneziaWG Packages
@@ -148,6 +145,23 @@ jobs:
           
           curl -sL "${DOWNLOAD_URL}" | tar -xz -C "${TARGET_DIR}" --strip-components=1
           ls -R "${TARGET_DIR}"
+
+      - name: Download luci-mod-status-nss
+        uses: actions/checkout@master
+        with:
+          repository: qosmio/packages-extra
+          ref: main
+          path: temp-repo
+          sparse-checkout: |
+            modules/luci-mod-status-nss
+          sparse-checkout-cone-mode: false
+
+      - name: Move luci-mod-status-nss to specific location
+        run: |
+          # Replace 'package/custom-mods' with your actual target path
+          mkdir -p feeds/luci/modules/luci-mod-status-nss
+          cp -r temp-repo/modules/luci-mod-status-nss/* feeds/luci/modules/luci-mod-status-nss
+          rm -rf temp-repo
 
       - name: Install Feeds
         run: |
