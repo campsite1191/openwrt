@@ -111,10 +111,6 @@ jobs:
       #     restore-keys: |
       #       ${{ runner.os }}-openwrt-toolchain
 
-      - name: Update Feeds
-        run: |
-          ./scripts/feeds update -a
-
       - name: Add AmneziaWG Packages
         run: |
           echo "Cloning and adding AmneziaWG packages"
@@ -158,13 +154,13 @@ jobs:
 
       - name: Move luci-mod-status-nss to specific location
         run: |
-          # Replace 'package/custom-mods' with your actual target path
           mkdir -p feeds/luci/modules/luci-mod-status-nss
           cp -r temp-repo/modules/luci-mod-status-nss/* feeds/luci/modules/luci-mod-status-nss
           rm -rf temp-repo
 
       - name: Install Feeds
         run: |
+          ./scripts/feeds update -a
           ./scripts/feeds install -a
           
       - name: Configure Firmware Image
