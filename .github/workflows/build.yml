@@ -164,7 +164,6 @@ jobs:
 
       - name: Install Feeds
         run: |
-          ./scripts/feeds update -a
           ./scripts/feeds install -a
           
       - name: Configure Firmware Image
