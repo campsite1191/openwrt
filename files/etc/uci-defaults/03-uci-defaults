@@ -1,6 +1,6 @@
 #!/bin/sh
 # Exit if the timezone is already set to "America/New York"
-[ "$(uci -q get system.@system[0].zonename)" = "America/Los Angeles" ] && exit 0
+[ "$(uci -q get system.@system[0].zonename)" = "America/Los_Angeles" ] && exit 0
 
 # This script will be placed in /rom/etc/uci-defaults/ as part of the image.
 
