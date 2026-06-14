@@ -123,7 +123,7 @@ jobs:
           rm -rf package/amneziawg-openwrt/Makefile
           sed -i 's#../../packages/lang/golang/golang-package.mk#../../../feeds/packages/lang/golang/golang-package.mk#g' package/amneziawg-openwrt/amneziawg-go/Makefile
           cat package/amneziawg-openwrt/amneziawg-go/Makefile
-
+          
       - name: Update and Add SmartDNS Package
         run: |
           echo "Fetching the latest SmartDNS commit hash"
@@ -132,6 +132,7 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/pymumu/smartdns/master/package/openwrt/Makefile -o feeds/packages/net/smartdns/Makefile
           sed -i -E "s/^(PKG_SOURCE_VERSION:=).*/\1$LATEST_COMMIT/" feeds/packages/net/smartdns/Makefile
           sed -i "s/MIRROR_HASH:=.*/MIRROR_HASH:=skip/" feeds/packages/net/smartdns/Makefile       
+          sed -i "s/DEPENDS:=/DEPENDS:=+zlib /g" feeds/packages/net/smartdns/Makefile
           cat feeds/packages/net/smartdns/Makefile
 
       - name: Update SmartDNS LuCI File
