@@ -10,15 +10,15 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # REMOTE_REPOSITORY: qosmio/openwrt-ipq
-  # REMOTE_BRANCH: 25.12-nss
-  REMOTE_REPOSITORY: AgustinLorenzo/openwrt
-  REMOTE_BRANCH: main_nss
+  REMOTE_REPOSITORY: qosmio/openwrt-ipq
+  REMOTE_BRANCH: 25.12-nss
+  # REMOTE_REPOSITORY: AgustinLorenzo/openwrt
+  # REMOTE_BRANCH: main_nss
   CUSTOM_FILES_PATH: files/
-  # NSS_PACKAGES_REPOSITORY: qosmio/nss-packages
-  # NSS_PACKAGES_REPOSITORY_BRANCH: NSS-12.5-K6.x
-  NSS_PACKAGES_REPOSITORY: AgustinLorenzo/nss-packages
-  NSS_PACKAGES_REPOSITORY_BRANCH: main_nss_wifi
+  NSS_PACKAGES_REPOSITORY: qosmio/nss-packages
+  NSS_PACKAGES_REPOSITORY_BRANCH: NSS-12.5-K6.x
+  # NSS_PACKAGES_REPOSITORY: AgustinLorenzo/nss-packages
+  # NSS_PACKAGES_REPOSITORY_BRANCH: main_nss_wifi
 
 jobs:
   check_commits:
