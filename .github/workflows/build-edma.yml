@@ -1,3 +1,163 @@
+Here are the finalized files with all the requested changes successfully applied.
+
+### 1. `mx4300-edma.config`
+
+This configuration removes the SQM packages, the devmem debugging flags, and the incompatible legacy Qualcomm drivers (`qca-nss-dp`, `qca-ssdk`, `nss-drv-igs`, `nss-drv-match`), while restoring standard Dropbear SSH and the `-O2` optimizations.
+
+```text
+# ==============================================================================
+# OpenWrt Configuration: Linksys MX4300 (IPQ807x) - EDMA Branch
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. TARGET PLATFORM & HARDWARE
+# ------------------------------------------------------------------------------
+CONFIG_TARGET_qualcommax=y
+CONFIG_TARGET_qualcommax_ipq807x=y
+CONFIG_TARGET_qualcommax_ipq807x_DEVICE_linksys_mx4300=y
+# CONFIG_TARGET_ROOTFS_INITRAMFS is not set
+
+# Memory Profile (Linksys MX4300 has 1GB RAM)
+CONFIG_ATH11K_MEM_PROFILE_1G=y
+CONFIG_IPQ_MEM_PROFILE_1024=y
+CONFIG_KERNEL_IPQ_MEM_PROFILE=1024
+CONFIG_NSS_MEM_PROFILE_HIGH=y
+
+# ------------------------------------------------------------------------------
+# 2. COMPILER & TOOLCHAIN OPTIMIZATION
+# ------------------------------------------------------------------------------
+CONFIG_BINUTILS_USE_VERSION_2_46=y
+CONFIG_DEVEL=y
+CONFIG_EXPERIMENTAL=y
+CONFIG_GCC_USE_VERSION_15=y
+CONFIG_TARGET_OPTIMIZATION="-O2 -pipe -mcpu=cortex-a53+crc+crypto"
+CONFIG_TARGET_OPTIONS=y
+CONFIG_TOOLCHAINOPTS=y
+CONFIG_USE_GC_SECTIONS=y
+CONFIG_USE_LTO=y
+CONFIG_USE_MOLD=y
+CONFIG_ZLIB_OPTIMIZE_SPEED=y
+# CONFIG_CCACHE is not set
+
+# ------------------------------------------------------------------------------
+# 3. KERNEL & SECURITY HARDENING
+# ------------------------------------------------------------------------------
+CONFIG_BUILD_PATENTED=y
+CONFIG_GCC_DEFAULT_PIE=y
+CONFIG_GCC_DEFAULT_SSP=y
+CONFIG_KERNEL_CC_STACKPROTECTOR_STRONG=y
+CONFIG_PKG_ASLR_PIE_ALL=y
+CONFIG_PKG_CC_STACKPROTECTOR_ALL=y
+CONFIG_PKG_CHECK_FORMAT_SECURITY=y
+CONFIG_PKG_FORTIFY_SOURCE_3=y
+CONFIG_PKG_RELRO_FULL=y
+CONFIG_USE_SECCOMP=y
+
+# ------------------------------------------------------------------------------
+# 4. CRYPTOGRAPHY (OpenSSL Enforced)
+# ------------------------------------------------------------------------------
+CONFIG_LUA_ECO_MBEDTLS=n
+CONFIG_LUA_ECO_OPENSSL=y
+CONFIG_OPENSSL_OPTIMIZE_SPEED=y
+CONFIG_PACKAGE_apk-mbedtls=n
+CONFIG_PACKAGE_apk-openssl=y
+CONFIG_PACKAGE_libopenssl=y
+CONFIG_PACKAGE_libopenssl-oqsprovider=y
+CONFIG_PACKAGE_libustream-mbedtls=n
+CONFIG_PACKAGE_libustream-openssl=y
+CONFIG_LIBCURL_MBEDTLS=n
+CONFIG_LIBCURL_OPENSSL=y
+CONFIG_PACKAGE_wpad-basic-mbedtls=n
+CONFIG_PACKAGE_wpad-openssl=y
+
+# ------------------------------------------------------------------------------
+# 5. HARDWARE ACCELERATION (EDMA NSS Stack)
+# ------------------------------------------------------------------------------
+# Enable injected custom NSS feed
+CONFIG_FEED_nss=y
+CONFIG_NSS_FIRMWARE_VERSION_12_5=y
+
+# Base Data Plane & ECM
+CONFIG_PACKAGE_kmod-qca-nss-drv=y
+CONFIG_PACKAGE_kmod-qca-nss-ecm=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-pppoe=y
+
+# Bridge, VLAN & Multicast Offloading
+CONFIG_PACKAGE_kmod-qca-nss-drv-bridge-mgr=y
+CONFIG_PACKAGE_kmod-qca-mcs=y
+CONFIG_KERNEL_IP_MROUTE=y
+CONFIG_KERNEL_IPV6_MROUTE=y
+
+# Wi-Fi Offload (wifili)
+CONFIG_ATH11K_NSS_SUPPORT=y
+CONFIG_PACKAGE_MAC80211_NSS_SUPPORT=y
+CONFIG_ATH11K_DEBUGFS_HTT_STATS=n
+CONFIG_ATH11K_DEBUGFS_STA=y
+
+# NSS Runtime Tools & Diagnostics
+CONFIG_PACKAGE_nss-tools=y
+CONFIG_PACKAGE_luci-app-nss=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-mirror=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-netlink=y
+CONFIG_PACKAGE_nssinfo=y
+CONFIG_PACKAGE_libnl-nss=y
+
+# ------------------------------------------------------------------------------
+# 6. NETWORK, VPN & CUSTOM PACKAGES
+# ------------------------------------------------------------------------------
+# Base Network Utilities
+CONFIG_PACKAGE_curl=y
+CONFIG_PACKAGE_htop=y
+CONFIG_HTOP_LMSENSORS=n
+CONFIG_PACKAGE_iperf3=y
+CONFIG_PACKAGE_btop=y
+CONFIG_PACKAGE_qrencode=y
+CONFIG_PACKAGE_rsync=y
+
+# TCP BBR Congestion Control
+CONFIG_PACKAGE_kmod-tcp-bbr=y
+
+# Custom DNS & Full IP Stack
+CONFIG_PACKAGE_ip-full=y
+CONFIG_PACKAGE_dnsmasq-full=y
+CONFIG_PACKAGE_smartdns=y
+CONFIG_PACKAGE_luci-app-smartdns=y
+CONFIG_PACKAGE_odhcpd=y
+
+# AmneziaWG
+CONFIG_PACKAGE_amneziawg-tools=y
+CONFIG_PACKAGE_kmod-amneziawg=y
+CONFIG_PACKAGE_luci-proto-amneziawg=y
+
+# USB & Filesystems
+CONFIG_PACKAGE_kmod-fs-vfat=y
+CONFIG_PACKAGE_kmod-usb-storage=y
+
+# ------------------------------------------------------------------------------
+# 7. LUCI (WEB UI)
+# ------------------------------------------------------------------------------
+CONFIG_PACKAGE_luci=y
+CONFIG_PACKAGE_luci-ssl-openssl=y
+CONFIG_PACKAGE_luci-app-bcp38=y
+CONFIG_PACKAGE_luci-app-ddns=y
+CONFIG_PACKAGE_luci-app-firewall=y
+CONFIG_PACKAGE_luci-app-package-manager=y
+CONFIG_PACKAGE_luci-app-pbr=y
+CONFIG_PACKAGE_luci-proto-wireguard=y
+
+# Disabled Redundant LuCI Apps
+CONFIG_PACKAGE_luci-app-attendedsysupgrade=n
+CONFIG_PACKAGE_attendedsysupgrade-common=n
+
+```
+
+---
+
+### 2. `.github/workflows/build.yml`
+
+This is the fully cleaned-up workflow file. It points directly to your new `mx4300-edma.config` file and has the redundant `luci-mod-status-nss` download logic completely removed.
+
+```yaml
 name: Build OpenWrt for Specific Target and Release
 
 on:
@@ -150,22 +310,6 @@ jobs:
           curl -sL "${DOWNLOAD_URL}" | tar -xz -C "${TARGET_DIR}" --strip-components=1
           ls -R "${TARGET_DIR}"
 
-      - name: Download luci-mod-status-nss
-        uses: actions/checkout@master
-        with:
-          repository: qosmio/packages-extra
-          ref: main
-          path: temp-repo
-          sparse-checkout: |
-            modules/luci-mod-status-nss
-          sparse-checkout-cone-mode: false
-
-      - name: Move luci-mod-status-nss to specific location
-        run: |
-          mkdir -p feeds/luci/modules/luci-mod-status-nss
-          cp -r temp-repo/modules/luci-mod-status-nss/* feeds/luci/modules/luci-mod-status-nss
-          rm -rf temp-repo
-
       - name: Install Feeds
         run: |
           ./scripts/feeds install -a
@@ -276,3 +420,5 @@ jobs:
               gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes
             fi
           done
+
+```
