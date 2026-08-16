@@ -36,10 +36,10 @@ jobs:
       - name: Check for New Commits in Remote Repository
         id: check_new_commits
         run: |
-          latest_commit_sha=$(curl -sL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ env.UPSTREAM_REPO }}/commits?sha=${{ env.UPSTREAM_REF }}&per_page=1" | jq -r '.[0].sha')
-          last_built_commit_sha=$(curl -sL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.body' | grep -oP 'Build Commit: \K\w+' || echo '')
-          echo "new_commits=$([[ "$latest_commit_sha" != "$last_built_commit_sha" ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
-          echo "latest_commit_sha=$latest_commit_sha" >> $GITHUB_OUTPUT
+          latest_commit_sha=$(curl -sL -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ env.UPSTREAM_REPO }}/commits?sha=${{ env.UPSTREAM_REF }}&per_page=1" | jq -r '.[0].sha')
+          last_built_commit_sha=$(curl -sL -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.body' | grep -oP 'Build Commit: \K\w+' || echo '')
+          echo "new_commits=$([[ "$latest_commit_sha" != "$last_built_commit_sha" ]] && echo "true" || echo "false")" >> "$GITHUB_OUTPUT"
+          echo "latest_commit_sha=$latest_commit_sha" >> "$GITHUB_OUTPUT"
 
           echo "Latest Commit SHA: $latest_commit_sha"
           echo "Last Built Commit SHA: $last_built_commit_sha"
@@ -47,10 +47,10 @@ jobs:
       - name: Check for New Commits in NSS Packages Repository
         id: check_nss_packages_repo_new_commits
         run: |
-          nss_packages_repo_latest_commit_sha=$(curl -sL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ env.NSS_REPO }}/commits?sha=${{ env.NSS_REF }}&per_page=1" | jq -r '.[0].sha')
-          nss_packages_repo_last_built_commit_sha=$(curl -sL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.body' | grep -oP 'NSS Packages Commit: \K\w+' || echo '')
-          echo "new_commits=$([[ "$nss_packages_repo_latest_commit_sha" != "$nss_packages_repo_last_built_commit_sha" ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
-          echo "latest_commit_sha=$nss_packages_repo_latest_commit_sha" >> $GITHUB_OUTPUT
+          nss_packages_repo_latest_commit_sha=$(curl -sL -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ env.NSS_REPO }}/commits?sha=${{ env.NSS_REF }}&per_page=1" | jq -r '.[0].sha')
+          nss_packages_repo_last_built_commit_sha=$(curl -sL -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.body' | grep -oP 'NSS Packages Commit: \K\w+' || echo '')
+          echo "new_commits=$([[ "$nss_packages_repo_latest_commit_sha" != "$nss_packages_repo_last_built_commit_sha" ]] && echo "true" || echo "false")" >> "$GITHUB_OUTPUT"
+          echo "latest_commit_sha=$nss_packages_repo_latest_commit_sha" >> "$GITHUB_OUTPUT"
           
           echo "Latest Commit SHA: $nss_packages_repo_latest_commit_sha"
           echo "Last Built Commit SHA: $nss_packages_repo_last_built_commit_sha"
@@ -64,10 +64,11 @@ jobs:
     steps:
       - name: Free up disk space
         run: |
-          df -h
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /var/lib/docker
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
           df -h
       
@@ -113,7 +114,7 @@ jobs:
 
       - name: Add Custom Feeds
         run: |
-          echo "${{ env.FEEDS }}" >> feeds.conf.default
+          printf "\n%s\n" "${{ env.FEEDS }}" >> feeds.conf.default
 
       - name: Update Feeds
         run: |
@@ -121,7 +122,6 @@ jobs:
 
       - name: Add AmneziaWG Packages
         run: |
-          echo "Cloning and adding AmneziaWG packages"
           git clone https://github.com/this-username-has-been-taken/amneziawg-openwrt.git package/amneziawg-openwrt
           rm -rf package/amneziawg-openwrt/Makefile
           sed -i 's#../../packages/lang/golang/golang-package.mk#../../../feeds/packages/lang/golang/golang-package.mk#g' package/amneziawg-openwrt/amneziawg-go/Makefile
@@ -129,9 +129,8 @@ jobs:
           
       - name: Update and Add SmartDNS Package
         run: |
-          echo "Fetching the latest SmartDNS commit hash"
           LATEST_COMMIT=$(git ls-remote https://github.com/pymumu/smartdns.git refs/heads/master | cut -f1)
-          [ -z "$LATEST_COMMIT" ] && { echo "Failed to fetch commit hash"; exit 1; }
+          [ -z "$LATEST_COMMIT" ] && { echo "Failed to fetch SmartDNS commit hash"; exit 1; }
           curl -fsSL https://raw.githubusercontent.com/pymumu/smartdns/master/package/openwrt/Makefile -o feeds/packages/net/smartdns/Makefile
           sed -i -E "s/^(PKG_SOURCE_VERSION:=).*/\1$LATEST_COMMIT/" feeds/packages/net/smartdns/Makefile
           sed -i "s/MIRROR_HASH:=.*/MIRROR_HASH:=skip/" feeds/packages/net/smartdns/Makefile       
@@ -146,7 +145,6 @@ jobs:
           
           rm -rf "${TARGET_DIR}"
           mkdir -p "${TARGET_DIR}"
-          
           curl -sL "${DOWNLOAD_URL}" | tar -xz -C "${TARGET_DIR}" --strip-components=1
           ls -R "${TARGET_DIR}"
 
@@ -165,7 +163,13 @@ jobs:
 
       - name: Include Custom Files
         run: |
-          cp -r custom_repo/${{ env.CUSTOM_FILES_PATH }} ./
+          if [ -d "custom_repo/${{ env.CUSTOM_FILES_PATH }}" ]; then
+            echo "Copying custom files from custom_repo/${{ env.CUSTOM_FILES_PATH }}..."
+            mkdir -p files
+            cp -r custom_repo/${{ env.CUSTOM_FILES_PATH }}/. files/
+          else
+            echo "No custom files directory found at custom_repo/${{ env.CUSTOM_FILES_PATH }}; skipping."
+          fi
 
       - name: Download Dependencies
         run: |
@@ -189,18 +193,17 @@ jobs:
             make -j1 V=sc world
           fi
 
-      - name: Copy .config File
-        run: cp .config bin/targets/${{ env.TARGET }}/config.txt
-
-      - name: Copy Directory Structure
-        run: tree > bin/targets/${{ env.TARGET }}/file_list.txt
+      - name: Organize Artifacts
+        run: |
+          cp .config bin/targets/${{ env.TARGET }}/config.txt
+          tree bin/targets/${{ env.TARGET }} > bin/targets/${{ env.TARGET }}/file_list.txt
+          rm -rf bin/targets/${{ env.TARGET }}/packages
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@master
         with:
           name: firmware-images
-          path: |
-            bin/targets/${{ env.TARGET }}/
+          path: bin/targets/${{ env.TARGET }}/
             
   release:
     name: Create a New Release
@@ -223,8 +226,8 @@ jobs:
       - name: Generate Date and Release Identifiers
         run: |
           DATE_STR=$(date +%F)
-          echo "RELEASE_DATE=$DATE_STR" >> $GITHUB_ENV
-          echo "RELEASE_TAG=${DATE_STR}-run-${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
+          echo "RELEASE_DATE=$DATE_STR" >> "$GITHUB_ENV"
+          echo "RELEASE_TAG=${DATE_STR}-run-${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
 
       - name: Generate Release Notes
         run: |
@@ -234,7 +237,7 @@ jobs:
           EOF
 
       - name: Publish Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@master
         with:
           files: firmware/*
           tag_name: ${{ env.RELEASE_TAG }}
