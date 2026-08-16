@@ -18,7 +18,7 @@ env:
   NSS_REPO: JuliusBairaktaris/nss-packages
   NSS_REF: edma-nss
   TARGET: qualcommax/ipq807x
-  KEEP: "2"
+  KEEP: 2
   FEEDS: "src-git nss https://github.com/JuliusBairaktaris/nss-packages.git;edma-nss"
   CUSTOM_FILES_PATH: files/
 
@@ -234,29 +234,19 @@ jobs:
           EOF
 
       - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: firmware/*
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: Updated Prebuilt Images ${{ env.RELEASE_DATE }}
+          body_path: release_notes.md
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          gh release create "${{ env.RELEASE_TAG }}" firmware/* \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "Updated Prebuilt Images ${{ env.RELEASE_DATE }}" \
-            --notes-file release_notes.md
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Clean Up Old Releases
+        uses: dev-drprasad/delete-older-releases@master
+        with:
+          keep_latest: ${{ env.KEEP }}
+          delete_tags: true
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          KEEP_COUNT: ${{ env.KEEP }}
-        run: |
-          set -euo pipefail
-          tail_start=$((KEEP_COUNT + 1))
-          
-          # Use gh api directly to safely pull just tag names, ignoring errors if fewer than KEEP_COUNT releases exist
-          old_releases=$(gh release list --limit 100 --json tagName -q '.[].tagName' | tail -n +${tail_start} || true)
-          
-          for tag in $old_releases; do
-            if [ -n "$tag" ]; then
-              echo "Deleting old release: $tag"
-              gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes
-            fi
-          done
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
