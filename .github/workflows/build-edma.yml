@@ -1,4 +1,4 @@
-name: Build OpenWrt for Specific Target and Release
+name: Build OpenWrt - EDMA
 
 on:
   workflow_dispatch:
