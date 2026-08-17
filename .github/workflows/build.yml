@@ -2,8 +2,8 @@ name: Build OpenWrt for Specific Target and Release
 
 on:
   workflow_dispatch: # Manual trigger
-  schedule: # Scheduled daily trigger at 12 AM Pacific Time (8 AM UTC)
-    - cron: "1 0 * * *"
+  # schedule: # Scheduled daily trigger at 12 AM Pacific Time (8 AM UTC)
+    # - cron: "1 0 * * *"
 
 concurrency:
   group: build-openwrt-${{ github.ref }}
