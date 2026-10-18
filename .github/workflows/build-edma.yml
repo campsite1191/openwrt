@@ -131,9 +131,16 @@ jobs:
         run: |
           git clone --depth 1 --filter=blob:none --sparse https://github.com/JuliusBairaktaris/Qualcommax_NSS_Builder.git /tmp/builder
           git -C /tmp/builder sparse-checkout set patches/feeds/ppe-nss/packages
-          if ls /tmp/builder/patches/feeds/ppe-nss/packages/*.patch 1> /dev/null 2>&1; then
-            patch -d feeds/packages -p1 < /tmp/builder/patches/feeds/ppe-nss/packages/*.patch
+          
+          if [ -d "/tmp/builder/patches/feeds/ppe-nss/packages" ]; then
+            for patch_file in /tmp/builder/patches/feeds/ppe-nss/packages/*.patch; do
+              if [ -f "$patch_file" ]; then
+                echo "Applying: $(basename "$patch_file")"
+                patch -d feeds/packages -p1 < "$patch_file"
+              fi
+            done
           fi
+          
           rm -rf /tmp/builder
 
       - name: Add AmneziaWG Packages
