@@ -151,13 +151,13 @@ jobs:
       - name: Install Feeds
         run: |
           ./scripts/feeds install -a
-
+          
       - name: Download Official Ookla Speedtest Binary
         run: |
           mkdir -p custom_repo/files/usr/bin
           curl -sL https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-aarch64.tgz | tar xz -C custom_repo/files/usr/bin speedtest
           chmod +x custom_repo/files/usr/bin/speedtest
-     
+      
       - name: Configure Firmware Image
         run: |
           mv custom_repo/mx4300-edma.config .config
@@ -210,7 +210,7 @@ jobs:
         with:
           name: firmware-images
           path: bin/targets/${{ env.TARGET }}/
-            
+          
   release:
     name: Create a New Release
     needs: [build, check_commits]
