@@ -134,12 +134,14 @@ jobs:
         run: |
           ./scripts/feeds update -a
 
-      - name: Inject Single luci-app-ppe-qos Package
+      - name: Inject and Index Single luci-app-ppe-qos Package
         run: |
           git clone --depth 1 --filter=blob:none --sparse --branch luci-app-ppe-qos https://github.com/JuliusBairaktaris/luci.git /tmp/luci-fork
           git -C /tmp/luci-fork sparse-checkout set applications/luci-app-ppe-qos
-          cp -r /tmp/luci-fork/applications/luci-app-ppe-qos feeds/luci/applications/
+          mkdir -p feeds/luci/applications
+          cp -rf /tmp/luci-fork/applications/luci-app-ppe-qos feeds/luci/applications/
           rm -rf /tmp/luci-fork
+          ./scripts/feeds update -i luci
 
       - name: Apply Hardware PPE-QoS SQM Backend Patch
         run: |
@@ -183,7 +185,9 @@ jobs:
       - name: Install Feeds
         run: |
           ./scripts/feeds install -a
-          ./scripts/feeds install -p luci luci-app-ppe-qos
+          ./scripts/feeds install -p luci -f luci-app-ppe-qos
+          mkdir -p package/feeds/luci
+          ln -sf ../../../feeds/luci/applications/luci-app-ppe-qos package/feeds/luci/luci-app-ppe-qos
 
       - name: Download Official Ookla Speedtest Binary
         run: |
@@ -195,6 +199,103 @@ jobs:
         run: |
           mv custom_repo/mx4300-edma.config .config
           make defconfig V=s
+
+      - name: Pre-Flight Fail-Fast Assertion Audit
+        run: |
+          set -e
+          ERRORS=0
+
+          echo "===================================================="
+          echo " RUNNING PRE-FLIGHT COMPILE INTEGRITY CHECKS"
+          echo "===================================================="
+
+          # 1. PHYSICAL FILE & PATCH APPLICATION INTEGRITY
+          echo "--> Checking physical patch injection..."
+          
+          if [ ! -f "feeds/packages/net/sqm-scripts/files/hw_ppe.qos" ]; then
+            echo "::error::[PATCH FAILURE] hw_ppe.qos SQM backend script is missing from feeds/packages/net/sqm-scripts/files/"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo " [OK] hw_ppe.qos SQM backend present"
+          fi
+
+          if [ ! -f "package/feeds/luci/luci-app-ppe-qos/Makefile" ]; then
+            echo "::error::[FEED SYMLINK FAILURE] luci-app-ppe-qos/Makefile not found in package/feeds/luci/"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo " [OK] luci-app-ppe-qos package registered"
+          fi
+
+          if [ ! -d "package/amneziawg-openwrt/amneziawg-tools" ]; then
+            echo "::error::[GIT CLONE FAILURE] amneziawg-openwrt package missing from package/ directory"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo " [OK] amneziawg-openwrt source present"
+          fi
+
+          if [ ! -x "custom_repo/files/usr/bin/speedtest" ]; then
+            echo "::error::[BINARY FAILURE] Ookla speedtest binary is missing or not executable in custom_repo/files/usr/bin/"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo " [OK] Ookla speedtest binary present and executable"
+          fi
+
+          # 2. REQUIRED HARDWARE ACCELERATION & KERNEL SYMBOLS (.config)
+          echo "--> Auditing required hardware offload symbols in .config..."
+          REQUIRED_SYMBOLS=(
+            "CONFIG_TARGET_qualcommax_ipq807x_DEVICE_linksys_mx4300=y"
+            "CONFIG_IPQ_MEM_PROFILE_1024=y"
+            "CONFIG_PACKAGE_kmod-nss-wifi-drv=y"
+            "CONFIG_ATH11K_NSS_WIFI=y"
+            "CONFIG_PACKAGE_nss-firmware-ipq807x=y"
+            "CONFIG_PACKAGE_ppe-qos=y"
+            "CONFIG_PACKAGE_luci-app-ppe-qos=y"
+            "CONFIG_PACKAGE_sqm-scripts=y"
+            "CONFIG_PACKAGE_kmod-sched-flower=y"
+            "CONFIG_PACKAGE_smartdns=y"
+            "CONFIG_PACKAGE_luci-app-smartdns=y"
+            "CONFIG_PACKAGE_kmod-amneziawg=y"
+            "CONFIG_PACKAGE_amneziawg-tools=y"
+            "CONFIG_PACKAGE_wpad-openssl=y"
+            "CONFIG_PACKAGE_apk-openssl=y"
+          )
+
+          for sym in "${REQUIRED_SYMBOLS[@]}"; do
+            if ! grep -Fxq "$sym" .config; then
+              echo "::error::[CONFIG PRUNED] Required symbol missing from .config: $sym"
+              ERRORS=$((ERRORS + 1))
+            else
+              echo " [OK] $sym"
+            fi
+          done
+
+          # 3. FORBIDDEN MBEDTLS & POLLUTING SYMBOLS (.config)
+          echo "--> Auditing forbidden/polluting symbols in .config..."
+          FORBIDDEN_SYMBOLS=(
+            "CONFIG_FEED_nss=y"
+            "CONFIG_PACKAGE_wpad-basic-mbedtls=y"
+            "CONFIG_PACKAGE_apk-mbedtls=y"
+            "CONFIG_PACKAGE_libustream-mbedtls=y"
+            "CONFIG_LIBCURL_MBEDTLS=y"
+          )
+
+          for sym in "${FORBIDDEN_SYMBOLS[@]}"; do
+            if grep -Fxq "$sym" .config; then
+              echo "::error::[SECURITY/FEED VIOLATION] Forbidden symbol enabled in .config: $sym"
+              ERRORS=$((ERRORS + 1))
+            else
+              echo " [OK] Forbidden symbol clean: $sym"
+            fi
+          done
+
+          # 4. FINAL VERDICT
+          echo "===================================================="
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "::error::Pre-flight check failed with $ERRORS error(s). Halting build to save time."
+            exit 1
+          fi
+          echo "All pre-flight assertions passed cleanly. Proceeding to dependency download and build."
+          echo "===================================================="
 
       - name: Print .config
         run: |
