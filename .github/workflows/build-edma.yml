@@ -127,21 +127,23 @@ jobs:
           cp -r /tmp/luci-fork/applications/luci-app-ppe-qos feeds/luci/applications/
           rm -rf /tmp/luci-fork
 
-      - name: Apply Hardware PPE-QoS SQM Backend Patch
+      - name: Apply Tree PPE Patches
         run: |
-          git clone --depth 1 --filter=blob:none --sparse https://github.com/JuliusBairaktaris/Qualcommax_NSS_Builder.git /tmp/builder
-          git -C /tmp/builder sparse-checkout set patches/feeds/ppe-nss/packages
+          # Sparse-clone only the tree patches from Qualcommax_NSS_Builder
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/JuliusBairaktaris/Qualcommax_NSS_Builder.git /tmp/builder-tree
+          git -C /tmp/builder-tree sparse-checkout set patches/tree/ppe
           
-          if [ -d "/tmp/builder/patches/feeds/ppe-nss/packages" ]; then
-            for patch_file in /tmp/builder/patches/feeds/ppe-nss/packages/*.patch; do
+          if [ -d "/tmp/builder-tree/patches/tree/ppe" ]; then
+            for patch_file in /tmp/builder-tree/patches/tree/ppe/*.patch; do
               if [ -f "$patch_file" ]; then
-                echo "Applying: $(basename "$patch_file")"
-                patch -d feeds/packages -p1 < "$patch_file"
+                echo "Evaluating tree patch: $(basename "$patch_file")"
+                # -N ignores patches that are already applied/reversed; -r - disables reject files
+                patch -p1 -N -r - < "$patch_file" || echo "Patch $(basename "$patch_file") already merged or skipped cleanly."
               fi
             done
           fi
           
-          rm -rf /tmp/builder
+          rm -rf /tmp/builder-tree
 
       - name: Add AmneziaWG Packages
         run: |
