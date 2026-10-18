@@ -1,4 +1,4 @@
-name: Build OpenWrt - EDMA
+name: Build OpenWrt - PPE-NSS
 
 on:
   workflow_dispatch:
@@ -71,7 +71,7 @@ jobs:
           sudo rm -rf /var/lib/docker
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
           df -h
-      
+
       - name: Install Build Dependencies
         run: |
           sudo apt update 
@@ -87,7 +87,7 @@ jobs:
 
       - name: Apply Temporary Patch
         run: |
-          curl -sL -o - https://patch-diff.githubusercontent.com/raw/openwrt/openwrt/pull/19071.patch | git apply -
+          curl -sL -o - https://patch-diff.githubusercontent.com/raw/openwrt/openwrt/pull/19071.patch | git apply - || true
 
       - name: Checkout Current Repository
         uses: actions/checkout@master
@@ -120,13 +120,28 @@ jobs:
         run: |
           ./scripts/feeds update -a
 
+      - name: Inject Single luci-app-ppe-qos Package
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse --branch luci-app-ppe-qos https://github.com/JuliusBairaktaris/luci.git /tmp/luci-fork
+          git -C /tmp/luci-fork sparse-checkout set applications/luci-app-ppe-qos
+          cp -r /tmp/luci-fork/applications/luci-app-ppe-qos feeds/luci/applications/
+          rm -rf /tmp/luci-fork
+
+      - name: Apply Hardware PPE-QoS SQM Backend Patch
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/JuliusBairaktaris/Qualcommax_NSS_Builder.git /tmp/builder
+          git -C /tmp/builder sparse-checkout set patches/feeds/ppe-nss/packages
+          if ls /tmp/builder/patches/feeds/ppe-nss/packages/*.patch 1> /dev/null 2>&1; then
+            patch -d feeds/packages -p1 < /tmp/builder/patches/feeds/ppe-nss/packages/*.patch
+          fi
+          rm -rf /tmp/builder
+
       - name: Add AmneziaWG Packages
         run: |
           git clone https://github.com/this-username-has-been-taken/amneziawg-openwrt.git package/amneziawg-openwrt
           rm -rf package/amneziawg-openwrt/Makefile
           sed -i 's#../../packages/lang/golang/golang-package.mk#../../../feeds/packages/lang/golang/golang-package.mk#g' package/amneziawg-openwrt/amneziawg-go/Makefile
-          cat package/amneziawg-openwrt/amneziawg-go/Makefile
-          
+
       - name: Update and Add SmartDNS Package
         run: |
           LATEST_COMMIT=$(git ls-remote https://github.com/pymumu/smartdns.git refs/heads/master | cut -f1)
@@ -135,7 +150,6 @@ jobs:
           sed -i -E "s/^(PKG_SOURCE_VERSION:=).*/\1$LATEST_COMMIT/" feeds/packages/net/smartdns/Makefile
           sed -i "s/MIRROR_HASH:=.*/MIRROR_HASH:=skip/" feeds/packages/net/smartdns/Makefile       
           sed -i "s/DEPENDS:=/DEPENDS:=+zlib /g" feeds/packages/net/smartdns/Makefile
-          cat feeds/packages/net/smartdns/Makefile
 
       - name: Update SmartDNS LuCI File
         run: |
@@ -146,18 +160,18 @@ jobs:
           rm -rf "${TARGET_DIR}"
           mkdir -p "${TARGET_DIR}"
           curl -sL "${DOWNLOAD_URL}" | tar -xz -C "${TARGET_DIR}" --strip-components=1
-          ls -R "${TARGET_DIR}"
 
       - name: Install Feeds
         run: |
           ./scripts/feeds install -a
-          
+          ./scripts/feeds install -p luci luci-app-ppe-qos
+
       - name: Download Official Ookla Speedtest Binary
         run: |
           mkdir -p custom_repo/files/usr/bin
           curl -sL https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-aarch64.tgz | tar xz -C custom_repo/files/usr/bin speedtest
           chmod +x custom_repo/files/usr/bin/speedtest
-      
+
       - name: Configure Firmware Image
         run: |
           mv custom_repo/mx4300-edma.config .config
@@ -210,7 +224,7 @@ jobs:
         with:
           name: firmware-images
           path: bin/targets/${{ env.TARGET }}/
-          
+
   release:
     name: Create a New Release
     needs: [build, check_commits]
@@ -247,7 +261,7 @@ jobs:
         with:
           files: firmware/*
           tag_name: ${{ env.RELEASE_TAG }}
-          name: EDMA Images ${{ env.RELEASE_DATE }}
+          name: PPE-NSS Images ${{ env.RELEASE_DATE }}
           body_path: release_notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
