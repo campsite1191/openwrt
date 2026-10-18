@@ -1,4 +1,4 @@
-name: Build OpenWrt - PPE-NSS
+name: Build OpenWrt - EDMA
 
 on:
   workflow_dispatch:
@@ -89,6 +89,20 @@ jobs:
         run: |
           curl -sL -o - https://patch-diff.githubusercontent.com/raw/openwrt/openwrt/pull/19071.patch | git apply - || true
 
+      - name: Apply Tree PPE Patches
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/JuliusBairaktaris/Qualcommax_NSS_Builder.git /tmp/builder-tree
+          git -C /tmp/builder-tree sparse-checkout set patches/tree/ppe
+          if [ -d "/tmp/builder-tree/patches/tree/ppe" ]; then
+            for patch_file in /tmp/builder-tree/patches/tree/ppe/*.patch; do
+              if [ -f "$patch_file" ]; then
+                echo "Applying tree patch: $(basename "$patch_file")"
+                patch -p1 -N -r - < "$patch_file" || echo "Patch $(basename "$patch_file") skipped or already applied."
+              fi
+            done
+          fi
+          rm -rf /tmp/builder-tree
+
       - name: Checkout Current Repository
         uses: actions/checkout@master
         with:
@@ -127,23 +141,19 @@ jobs:
           cp -r /tmp/luci-fork/applications/luci-app-ppe-qos feeds/luci/applications/
           rm -rf /tmp/luci-fork
 
-      - name: Apply Tree PPE Patches
+      - name: Apply Hardware PPE-QoS SQM Backend Patch
         run: |
-          # Sparse-clone only the tree patches from Qualcommax_NSS_Builder
-          git clone --depth 1 --filter=blob:none --sparse https://github.com/JuliusBairaktaris/Qualcommax_NSS_Builder.git /tmp/builder-tree
-          git -C /tmp/builder-tree sparse-checkout set patches/tree/ppe
-          
-          if [ -d "/tmp/builder-tree/patches/tree/ppe" ]; then
-            for patch_file in /tmp/builder-tree/patches/tree/ppe/*.patch; do
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/JuliusBairaktaris/Qualcommax_NSS_Builder.git /tmp/builder-feeds
+          git -C /tmp/builder-feeds sparse-checkout set patches/feeds/ppe-nss/packages
+          if [ -d "/tmp/builder-feeds/patches/feeds/ppe-nss/packages" ]; then
+            for patch_file in /tmp/builder-feeds/patches/feeds/ppe-nss/packages/*.patch; do
               if [ -f "$patch_file" ]; then
-                echo "Evaluating tree patch: $(basename "$patch_file")"
-                # -N ignores patches that are already applied/reversed; -r - disables reject files
-                patch -p1 -N -r - < "$patch_file" || echo "Patch $(basename "$patch_file") already merged or skipped cleanly."
+                echo "Applying packages patch: $(basename "$patch_file")"
+                patch -d feeds/packages -p1 < "$patch_file" || echo "Patch $(basename "$patch_file") skipped."
               fi
             done
           fi
-          
-          rm -rf /tmp/builder-tree
+          rm -rf /tmp/builder-feeds
 
       - name: Add AmneziaWG Packages
         run: |
@@ -270,7 +280,7 @@ jobs:
         with:
           files: firmware/*
           tag_name: ${{ env.RELEASE_TAG }}
-          name: PPE-NSS Images ${{ env.RELEASE_DATE }}
+          name: EDMA Images ${{ env.RELEASE_DATE }}
           body_path: release_notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
