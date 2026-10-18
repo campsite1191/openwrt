@@ -1,4 +1,4 @@
-name: Build OpenWrt - EDMA
+name: Build OpenWrt - PPE-NSS
 
 on:
   workflow_dispatch:
@@ -146,15 +146,13 @@ jobs:
       - name: Apply Hardware PPE-QoS SQM Backend Patch
         run: |
           git clone --depth 1 --filter=blob:none --sparse https://github.com/JuliusBairaktaris/Qualcommax_NSS_Builder.git /tmp/builder-feeds
-          git -C /tmp/builder-feeds sparse-checkout set patches/feeds/ppe-nss/packages
-          if [ -d "/tmp/builder-feeds/patches/feeds/ppe-nss/packages" ]; then
-            for patch_file in /tmp/builder-feeds/patches/feeds/ppe-nss/packages/*.patch; do
-              if [ -f "$patch_file" ]; then
-                echo "Applying packages patch: $(basename "$patch_file")"
-                patch -d feeds/packages -p1 < "$patch_file" || echo "Patch $(basename "$patch_file") skipped."
-              fi
-            done
-          fi
+          git -C /tmp/builder-feeds sparse-checkout set patches/feeds
+          find /tmp/builder-feeds/patches/feeds -name "*.patch" | while read -r patch_file; do
+            if grep -q "hw_ppe.qos" "$patch_file" || [[ "$patch_file" == *"packages"* ]]; then
+              echo "Applying packages patch: $(basename "$patch_file")"
+              patch -d feeds/packages -p1 -N -r - < "$patch_file" || true
+            fi
+          done
           rm -rf /tmp/builder-feeds
 
       - name: Add AmneziaWG Packages
@@ -197,7 +195,7 @@ jobs:
 
       - name: Configure Firmware Image
         run: |
-          mv custom_repo/mx4300-edma.config .config
+          mv custom_repo/mx4300-ppe.config .config
           make defconfig V=s
 
       - name: Pre-Flight Fail-Fast Assertion Audit
@@ -244,13 +242,14 @@ jobs:
           echo "--> Auditing required hardware offload symbols in .config..."
           REQUIRED_SYMBOLS=(
             "CONFIG_TARGET_qualcommax_ipq807x_DEVICE_linksys_mx4300=y"
-            "CONFIG_IPQ_MEM_PROFILE_1024=y"
+            "CONFIG_ATH11K_MEM_PROFILE_1G=y"
             "CONFIG_PACKAGE_kmod-nss-wifi-drv=y"
             "CONFIG_ATH11K_NSS_WIFI=y"
             "CONFIG_PACKAGE_nss-firmware-ipq807x=y"
             "CONFIG_PACKAGE_ppe-qos=y"
             "CONFIG_PACKAGE_luci-app-ppe-qos=y"
             "CONFIG_PACKAGE_sqm-scripts=y"
+            "CONFIG_PACKAGE_tc-tiny=y"
             "CONFIG_PACKAGE_kmod-sched-flower=y"
             "CONFIG_PACKAGE_smartdns=y"
             "CONFIG_PACKAGE_luci-app-smartdns=y"
@@ -273,6 +272,7 @@ jobs:
           echo "--> Auditing forbidden/polluting symbols in .config..."
           FORBIDDEN_SYMBOLS=(
             "CONFIG_FEED_nss=y"
+            "CONFIG_PACKAGE_tc=y"
             "CONFIG_PACKAGE_wpad-basic-mbedtls=y"
             "CONFIG_PACKAGE_apk-mbedtls=y"
             "CONFIG_PACKAGE_libustream-mbedtls=y"
@@ -381,7 +381,7 @@ jobs:
         with:
           files: firmware/*
           tag_name: ${{ env.RELEASE_TAG }}
-          name: EDMA Images ${{ env.RELEASE_DATE }}
+          name: PPE-NSS Images ${{ env.RELEASE_DATE }}
           body_path: release_notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
