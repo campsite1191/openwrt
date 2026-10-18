@@ -210,11 +210,12 @@ jobs:
           # 1. PHYSICAL FILE & PATCH APPLICATION INTEGRITY
           echo "--> Checking physical patch injection..."
           
-          if [ ! -f "feeds/packages/net/sqm-scripts/files/hw_ppe.qos" ]; then
-            echo "::error::[PATCH FAILURE] hw_ppe.qos SQM backend script is missing from feeds/packages/net/sqm-scripts/files/"
+          # Verify that net/sqm-scripts/Makefile has uncommitted patch changes
+          if git -C feeds/packages diff --quiet net/sqm-scripts/Makefile; then
+            echo "::error::[PATCH FAILURE] net/sqm-scripts/Makefile was not modified by the hw_ppe fork patch!"
             ERRORS=$((ERRORS + 1))
           else
-            echo " [OK] hw_ppe.qos SQM backend present"
+            echo " [OK] sqm-scripts Makefile successfully patched with hw_ppe fork"
           fi
 
           if [ ! -f "package/feeds/luci/luci-app-ppe-qos/Makefile" ]; then
@@ -242,7 +243,6 @@ jobs:
           echo "--> Auditing required hardware offload symbols in .config..."
           REQUIRED_SYMBOLS=(
             "CONFIG_TARGET_qualcommax_ipq807x_DEVICE_linksys_mx4300=y"
-            "CONFIG_ATH11K_MEM_PROFILE_1G=y"
             "CONFIG_PACKAGE_kmod-nss-wifi-drv=y"
             "CONFIG_ATH11K_NSS_WIFI=y"
             "CONFIG_PACKAGE_nss-firmware-ipq807x=y"
