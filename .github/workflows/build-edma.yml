@@ -14,7 +14,7 @@ permissions:
 
 env:
   UPSTREAM_REPO: JuliusBairaktaris/openwrt-ppe-nss
-  UPSTREAM_REF: pse-nss
+  UPSTREAM_REF: ppe-nss
   NSS_REPO: JuliusBairaktaris/nss-packages
   NSS_REF: edma-nss
   TARGET: qualcommax/ipq807x
