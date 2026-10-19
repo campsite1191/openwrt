@@ -3,7 +3,7 @@ name: Build OpenWrt - PPE-NSS
 on:
   workflow_dispatch:
   schedule:
-    - cron: "1 0 * * *"
+    - cron: "1 */2 * * *"
 
 concurrency:
   group: build-openwrt-${{ github.ref }}
