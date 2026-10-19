@@ -137,9 +137,9 @@ jobs:
       - name: Inject and Index Single luci-app-ppe-qos Package
         run: |
           git clone --depth 1 --filter=blob:none --sparse --branch luci-app-ppe-qos https://github.com/JuliusBairaktaris/luci.git /tmp/luci-fork
-          git -C /tmp/luci-fork sparse-checkout set applications/luci-app-ppe-qos
+          git -C /tmp/luci-fork sparse-checkout set applications/luci-app-qca-ppe-qos
           mkdir -p feeds/luci/applications
-          cp -rf /tmp/luci-fork/applications/luci-app-ppe-qos feeds/luci/applications/
+          cp -rf /tmp/luci-fork/applications/luci-app-qca-ppe-qos feeds/luci/applications/
           rm -rf /tmp/luci-fork
           ./scripts/feeds update -i luci
 
@@ -246,8 +246,8 @@ jobs:
             "CONFIG_PACKAGE_kmod-nss-wifi-drv=y"
             "CONFIG_ATH11K_NSS_WIFI=y"
             "CONFIG_PACKAGE_nss-firmware-ipq807x=y"
-            "CONFIG_PACKAGE_ppe-qos=y"
-            "CONFIG_PACKAGE_luci-app-ppe-qos=y"
+            "CONFIG_PACKAGE_qca-ppe-qos=y"
+            "CONFIG_PACKAGE_luci-app-qca-ppe-qos=y"
             "CONFIG_PACKAGE_sqm-scripts=y"
             "CONFIG_PACKAGE_tc-tiny=y"
             "CONFIG_PACKAGE_kmod-sched-flower=y"
