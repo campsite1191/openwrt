@@ -134,7 +134,7 @@ jobs:
         run: |
           ./scripts/feeds update -a
 
-      - name: Inject and Index Single luci-app-ppe-qos Package
+      - name: Inject and Index Single luci-app-qca-ppe-qos Package
         run: |
           git clone --depth 1 --filter=blob:none --sparse --branch luci-app-ppe-qos https://github.com/JuliusBairaktaris/luci.git /tmp/luci-fork
           git -C /tmp/luci-fork sparse-checkout set applications/luci-app-qca-ppe-qos
@@ -183,9 +183,9 @@ jobs:
       - name: Install Feeds
         run: |
           ./scripts/feeds install -a
-          ./scripts/feeds install -p luci -f luci-app-ppe-qos
+          ./scripts/feeds install -p luci -f luci-app-qca-ppe-qos
           mkdir -p package/feeds/luci
-          ln -sf ../../../feeds/luci/applications/luci-app-ppe-qos package/feeds/luci/luci-app-ppe-qos
+          ln -sf ../../../feeds/luci/applications/luci-app-qca-ppe-qos package/feeds/luci/luci-app-qca-ppe-qos
 
       - name: Download Official Ookla Speedtest Binary
         run: |
@@ -218,11 +218,11 @@ jobs:
             echo " [OK] sqm-scripts Makefile successfully patched with hw_ppe fork"
           fi
 
-          if [ ! -f "package/feeds/luci/luci-app-ppe-qos/Makefile" ]; then
-            echo "::error::[FEED SYMLINK FAILURE] luci-app-ppe-qos/Makefile not found in package/feeds/luci/"
+          if [ ! -f "package/feeds/luci/luci-app-qca-ppe-qos/Makefile" ]; then
+            echo "::error::[FEED SYMLINK FAILURE] luci-app-qca-ppe-qos/Makefile not found in package/feeds/luci/"
             ERRORS=$((ERRORS + 1))
           else
-            echo " [OK] luci-app-ppe-qos package registered"
+            echo " [OK] luci-app-qca-ppe-qos package registered"
           fi
 
           if [ ! -d "package/amneziawg-openwrt/amneziawg-tools" ]; then
