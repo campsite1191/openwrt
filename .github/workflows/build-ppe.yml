@@ -16,7 +16,7 @@ env:
   UPSTREAM_REPO: JuliusBairaktaris/openwrt-ppe-nss
   UPSTREAM_REF: ppe-nss
   NSS_REPO: JuliusBairaktaris/nss-packages
-  NSS_REF: edma-nss
+  NSS_REF: ppe-nss
   TARGET: qualcommax/ipq807x
   KEEP: 2
   FEEDS: "src-git nss https://github.com/JuliusBairaktaris/nss-packages.git;ppe-nss"
