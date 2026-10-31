@@ -45,7 +45,7 @@ Based on upstream work by [JuliusBairaktaris/openwrt-ppe-nss](https://github.com
 
 ## Automated CI/CD Pipeline
 
-The GitHub Actions workflow (`.github/workflows/build-ppe.yml`) checks every 12 hours for updates across:
+The GitHub Actions workflow (`.github/workflows/build-ppe.yml`) runs automatically once a week on Friday mornings at 05:00 PDT / 12:00 UTC (and on demand via `workflow_dispatch`), checking for updates across:
 1. Upstream OpenWrt tree (`openwrt-ppe-nss`, branch `ppe-nss`)
 2. NSS Packages repository (`nss-packages`, branch `ppe-nss`)
 3. Local configuration changes in this repository
