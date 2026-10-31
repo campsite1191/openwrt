@@ -14,7 +14,7 @@ Based on upstream work by [JuliusBairaktaris/openwrt-ppe-nss](https://github.com
 | **Bridging & Switching** | **PPE** | Linux `switchdev` hardware bridging, VLAN filtering, and IGMP/MLD snooping. |
 | **SQM Traffic Shaping** | **PPE** | Hardware-accelerated tc qdisc flower offload (`hw_ppe.qos`), `qca-ppe-qos`, and `dcb`. |
 | **Wi-Fi Data Path** | **NSS** | High-performance `nss-wifi-drv` host driver with `ath11k` offloaded to the NSS cores (firmware 12.5 active). |
-| **NSS Memory Profile** | **HIGH** | Configured for the Linksys MX4300's 2GB RAM (`CONFIG_NSS_MEM_PROFILE_HIGH=y`). |
+| **Hardware Buffer Sizing** | **Dynamic 2GB** | Dynamic hardware buffer scaling for the Linksys MX4300's 2GB DDR4 RAM and Qualcomm PPE/NSS acceleration. |
 
 ---
 

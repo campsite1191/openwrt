@@ -340,11 +340,16 @@ jobs:
       - name: Download Dependencies
         run: |
           set -euo pipefail
+          success=0
           for attempt in 1 2 3; do
-            make -j$(($(nproc)+1)) V=sc download && break
+            if make -j$(($(nproc)+1)) V=sc download; then
+              success=1
+              break
+            fi
             echo "Download attempt $attempt failed; retrying..."
             sleep 5
           done
+          [ "$success" -eq 1 ] || { echo "::error::All download attempts failed"; exit 1; }
 
       - name: Prepare Dependencies
         run: |
@@ -365,7 +370,7 @@ jobs:
             echo "===================================================="
             echo " CCACHE STATS"
             echo "===================================================="
-            staging_dir/host/bin/ccache -s
+            CCACHE_DIR=.ccache staging_dir/host/bin/ccache -s
             echo "===================================================="
           fi
 
