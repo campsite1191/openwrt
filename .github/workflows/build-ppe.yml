@@ -1,0 +1,432 @@
+name: Build OpenWrt - PPE-NSS
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "1 */12 * * *"
+
+concurrency:
+  group: build-openwrt-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  UPSTREAM_REPO: JuliusBairaktaris/openwrt-ppe-nss
+  UPSTREAM_REF: ppe-nss
+  NSS_REPO: JuliusBairaktaris/nss-packages
+  NSS_REF: ppe-nss
+  TARGET: qualcommax/ipq807x
+  KEEP: 7
+  FEEDS: |
+    src-git nss https://github.com/JuliusBairaktaris/nss-packages.git;ppe-nss
+    src-git amnezia https://github.com/this-username-has-been-taken/amneziawg-openwrt.git
+  CUSTOM_FILES_PATH: files/
+
+jobs:
+  check_commits:
+    name: Check for New Commits
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      new_commits: ${{ steps.check_new_commits.outputs.new_commits }}
+      latest_commit_sha: ${{ steps.check_new_commits.outputs.latest_commit_sha }}
+      nss_packages_repo_new_commits: ${{ steps.check_nss_packages_repo_new_commits.outputs.new_commits }}
+      nss_packages_repo_latest_commit_sha: ${{ steps.check_nss_packages_repo_new_commits.outputs.latest_commit_sha }}
+      config_new_commits: ${{ steps.check_config_repo_new_commits.outputs.new_commits }}
+      config_commit_sha: ${{ steps.check_config_repo_new_commits.outputs.latest_commit_sha }}
+    steps:
+      - name: Check for New Commits in Remote Repository
+        id: check_new_commits
+        run: |
+          latest_commit_sha=$(curl -sL -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ env.UPSTREAM_REPO }}/commits?sha=${{ env.UPSTREAM_REF }}&per_page=1" | jq -r '.[0].sha')
+          last_built_commit_sha=$(curl -sL -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.body' | grep -oP 'Build Commit: \K\w+' || echo '')
+          echo "new_commits=$([[ "$latest_commit_sha" != "$last_built_commit_sha" ]] && echo "true" || echo "false")" >> "$GITHUB_OUTPUT"
+          echo "latest_commit_sha=$latest_commit_sha" >> "$GITHUB_OUTPUT"
+
+          echo "Latest Commit SHA: $latest_commit_sha"
+          echo "Last Built Commit SHA: $last_built_commit_sha"
+
+      - name: Check for New Commits in NSS Packages Repository
+        id: check_nss_packages_repo_new_commits
+        run: |
+          nss_packages_repo_latest_commit_sha=$(curl -sL -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ env.NSS_REPO }}/commits?sha=${{ env.NSS_REF }}&per_page=1" | jq -r '.[0].sha')
+          nss_packages_repo_last_built_commit_sha=$(curl -sL -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.body' | grep -oP 'NSS Packages Commit: \K\w+' || echo '')
+          echo "new_commits=$([[ "$nss_packages_repo_latest_commit_sha" != "$nss_packages_repo_last_built_commit_sha" ]] && echo "true" || echo "false")" >> "$GITHUB_OUTPUT"
+          echo "latest_commit_sha=$nss_packages_repo_latest_commit_sha" >> "$GITHUB_OUTPUT"
+          
+          echo "Latest Commit SHA: $nss_packages_repo_latest_commit_sha"
+          echo "Last Built Commit SHA: $nss_packages_repo_last_built_commit_sha"
+
+      - name: Check for New Commits in Local Config Repository
+        id: check_config_repo_new_commits
+        run: |
+          config_commit_sha=$(curl -sL -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/commits?sha=main&per_page=1" | jq -r '.[0].sha')
+          last_built_config_commit_sha=$(curl -sL -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r '.body' | grep -oP 'Config Commit: \K\w+' || echo '')
+          echo "new_commits=$([[ "$config_commit_sha" != "$last_built_config_commit_sha" ]] && echo "true" || echo "false")" >> "$GITHUB_OUTPUT"
+          echo "latest_commit_sha=$config_commit_sha" >> "$GITHUB_OUTPUT"
+
+          echo "Current Config SHA: $config_commit_sha"
+          echo "Last Built Config SHA: $last_built_config_commit_sha"
+
+  build:
+    name: Build OpenWrt Firmware
+    needs: check_commits
+    if: needs.check_commits.outputs.new_commits == 'true' || needs.check_commits.outputs.nss_packages_repo_new_commits == 'true' || needs.check_commits.outputs.config_new_commits == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /var/lib/docker
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          df -h
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev file wget mold tree ccache
+
+      - name: Checkout Remote Repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          repository: ${{ env.UPSTREAM_REPO }}
+          ref: ${{ env.UPSTREAM_REF }}
+
+      - name: Apply Temporary Patch
+        run: |
+          curl -sL -o - https://patch-diff.githubusercontent.com/raw/openwrt/openwrt/pull/19071.patch | git apply - || true
+
+      - name: Checkout Current Repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          path: "custom_repo"
+
+      - name: Set reproducible-build env
+        run: |
+          set -euo pipefail
+          {
+            echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct HEAD)"
+            echo "TZ=UTC"
+            echo "LC_ALL=C"
+            echo "KBUILD_BUILD_USER=builder"
+            echo "KBUILD_BUILD_HOST=github"
+          } >> "$GITHUB_ENV"
+
+      - name: Add Custom Feeds
+        run: |
+          printf "\n%s\n" "${{ env.FEEDS }}" >> feeds.conf.default
+
+      - name: Update Feeds
+        run: |
+          ./scripts/feeds update -a
+
+      - name: Inject and Index Single luci-app-qca-ppe-qos Package
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse --branch luci-app-ppe-qos https://github.com/JuliusBairaktaris/luci.git /tmp/luci-fork
+          git -C /tmp/luci-fork sparse-checkout set applications/luci-app-qca-ppe-qos
+          mkdir -p feeds/luci/applications
+          cp -rf /tmp/luci-fork/applications/luci-app-qca-ppe-qos feeds/luci/applications/
+          rm -rf /tmp/luci-fork
+          ./scripts/feeds update -i luci
+
+      - name: Apply Hardware PPE-QoS SQM Backend Patch
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/JuliusBairaktaris/Qualcommax_NSS_Builder.git /tmp/builder-feeds
+          git -C /tmp/builder-feeds sparse-checkout set patches/feeds
+          find /tmp/builder-feeds/patches/feeds -name "*.patch" | while read -r patch_file; do
+            if grep -q "hw_ppe.qos" "$patch_file" || [[ "$patch_file" == *"packages"* ]]; then
+              echo "Applying packages patch: $(basename "$patch_file")"
+              patch -d feeds/packages -p1 -N -r - < "$patch_file" || true
+            fi
+          done
+          rm -rf /tmp/builder-feeds
+
+      - name: Update and Add SmartDNS Package
+        run: |
+          LATEST_COMMIT=$(git ls-remote https://github.com/pymumu/smartdns.git refs/heads/master | cut -f1)
+          [ -z "$LATEST_COMMIT" ] && { echo "Failed to fetch SmartDNS commit hash"; exit 1; }
+          curl -fsSL https://raw.githubusercontent.com/pymumu/smartdns/master/package/openwrt/Makefile -o feeds/packages/net/smartdns/Makefile
+          sed -i -E "s/^(PKG_SOURCE_VERSION:=).*/\1$LATEST_COMMIT/" feeds/packages/net/smartdns/Makefile
+          sed -i "s/MIRROR_HASH:=.*/MIRROR_HASH:=skip/" feeds/packages/net/smartdns/Makefile       
+          sed -i "s/DEPENDS:=/DEPENDS:=+zlib /g" feeds/packages/net/smartdns/Makefile
+
+      - name: Update SmartDNS LuCI File
+        run: |
+          REPO_NAME="luci-app-smartdns"
+          TARGET_DIR="$(pwd)/feeds/luci/applications/${REPO_NAME}"
+          DOWNLOAD_URL="https://github.com/pymumu/${REPO_NAME}/archive/master.tar.gz"
+          
+          rm -rf "${TARGET_DIR}"
+          mkdir -p "${TARGET_DIR}"
+          curl -sL "${DOWNLOAD_URL}" | tar -xz -C "${TARGET_DIR}" --strip-components=1
+
+      - name: Install Feeds
+        run: |
+          ./scripts/feeds install -a
+          ./scripts/feeds install -p luci -f luci-app-qca-ppe-qos
+          mkdir -p package/feeds/luci
+          ln -sf ../../../feeds/luci/applications/luci-app-qca-ppe-qos package/feeds/luci/luci-app-qca-ppe-qos
+
+      - name: Download Official Ookla Speedtest Binary
+        run: |
+          mkdir -p custom_repo/files/usr/bin
+          curl -sL https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-aarch64.tgz | tar xz -C custom_repo/files/usr/bin speedtest
+          chmod +x custom_repo/files/usr/bin/speedtest
+
+      - name: Configure Firmware Image
+        run: |
+          cp custom_repo/mx4300-ppe.config .config.orig
+          cp custom_repo/mx4300-ppe.config .config
+          make defconfig V=s
+          sed -i 's/^CONFIG_FEED_nss=.*/# CONFIG_FEED_nss is not set/' .config || true
+          sed -i 's/^CONFIG_FEED_amnezia=.*/# CONFIG_FEED_amnezia is not set/' .config || true
+
+      - name: Pre-Flight Fail-Fast Assertion Audit
+        run: |
+          set -e
+          ERRORS=0
+
+          echo "===================================================="
+          echo " RUNNING PRE-FLIGHT COMPILE INTEGRITY CHECKS"
+          echo "===================================================="
+
+          # 1. PHYSICAL FILE & PATCH APPLICATION INTEGRITY
+          echo "--> Checking physical patch injection..."
+          
+          if git -C feeds/packages diff --quiet net/sqm-scripts/Makefile; then
+            echo "::error::[PATCH FAILURE] net/sqm-scripts/Makefile was not modified by the hw_ppe fork patch!"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo " [OK] sqm-scripts Makefile successfully patched with hw_ppe fork"
+          fi
+
+          if [ ! -f "package/feeds/luci/luci-app-qca-ppe-qos/Makefile" ]; then
+            echo "::error::[FEED SYMLINK FAILURE] luci-app-qca-ppe-qos/Makefile not found in package/feeds/luci/"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo " [OK] luci-app-qca-ppe-qos package registered"
+          fi
+
+          if [ ! -d "package/feeds/amnezia/amneziawg-tools" ] && [ ! -d "feeds/amnezia/amneziawg-tools" ]; then
+            echo "::error::[FEED FAILURE] amneziawg-tools package missing from amnezia feed"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo " [OK] amneziawg-openwrt source present in feed"
+          fi
+
+          if [ ! -x "custom_repo/files/usr/bin/speedtest" ]; then
+            echo "::error::[BINARY FAILURE] Ookla speedtest binary is missing or not executable in custom_repo/files/usr/bin/"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo " [OK] Ookla speedtest binary present and executable"
+          fi
+
+          # 2. ESSENTIAL SYMBOLS INTEGRITY CHECK
+          echo "--> Auditing essential core symbols in .config..."
+          ESSENTIAL_SYMBOLS=(
+            "CONFIG_TARGET_qualcommax=y"
+            "CONFIG_TARGET_qualcommax_ipq807x=y"
+            "CONFIG_TARGET_qualcommax_ipq807x_DEVICE_linksys_mx4300=y"
+            "CONFIG_PACKAGE_kmod-nss-wifi-drv=y"
+            "CONFIG_PACKAGE_kmod-amneziawg=y"
+            "CONFIG_PACKAGE_smartdns=y"
+            "CONFIG_PACKAGE_luci-app-smartdns=y"
+            "CONFIG_PACKAGE_luci-app-qca-ppe-qos=y"
+            "CONFIG_PACKAGE_sqm-scripts=y"
+          )
+
+          for sym in "${ESSENTIAL_SYMBOLS[@]}"; do
+            if ! grep -qxF "$sym" .config; then
+              echo "::error::[CRITICAL MISSING] Required symbol absent from .config: $sym"
+              ERRORS=$((ERRORS + 1))
+            else
+              echo " [OK] Essential symbol retained: $sym"
+            fi
+          done
+
+          echo "--> Logging any symbols normalized or pruned by defconfig..."
+          while IFS= read -r req; do
+            if ! grep -qxF "$req" .config; then
+              echo "::notice::[DEFCONFIG NORMALIZED] Symbol omitted by defconfig: $req"
+            fi
+          done < <(grep -E '^CONFIG_[A-Za-z0-9_-]+=' .config.orig | awk -F= '{ last[$1] = $0 } END { for (s in last) print last[s] }' | grep -vE '=n$')
+
+          # 3. FORBIDDEN MBEDTLS & POLLUTING SYMBOLS (.config)
+          echo "--> Auditing forbidden/polluting symbols in .config..."
+          FORBIDDEN_SYMBOLS=(
+            "CONFIG_FEED_nss=y"
+            "CONFIG_FEED_amnezia=y"
+            "CONFIG_PACKAGE_tc=y"
+            "CONFIG_PACKAGE_wpad-basic-mbedtls=y"
+            "CONFIG_PACKAGE_apk-mbedtls=y"
+            "CONFIG_PACKAGE_libustream-mbedtls=y"
+            "CONFIG_LIBCURL_MBEDTLS=y"
+          )
+
+          for sym in "${FORBIDDEN_SYMBOLS[@]}"; do
+            if grep -Fxq "$sym" .config; then
+              echo "::error::[SECURITY/FEED VIOLATION] Forbidden symbol enabled in .config: $sym"
+              ERRORS=$((ERRORS + 1))
+            else
+              echo " [OK] Forbidden symbol clean: $sym"
+            fi
+          done
+
+          # 4. FINAL VERDICT
+          echo "===================================================="
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "::error::Pre-flight check failed with $ERRORS error(s). Halting build to save time."
+            exit 1
+          fi
+          echo "All pre-flight assertions passed cleanly. Proceeding to dependency download and build."
+          echo "===================================================="
+
+      - name: Compute ccache key
+        id: ccache
+        run: |
+          set -euo pipefail
+          tree=$(git rev-parse HEAD:toolchain)
+          sum=$({
+            echo "$tree"
+            grep -E '^CONFIG_(BINUTILS|GCC|LIBC|MUSL|GLIBC)_' .config
+            gcc --version; as --version
+          } | sha256sum | cut -c1-16)
+          echo "prefix=ccache-${{ env.TARGET }}-$sum-" >> "$GITHUB_OUTPUT"
+
+      - name: Restore ccache
+        uses: actions/cache@v6
+        with:
+          path: .ccache
+          key: ${{ steps.ccache.outputs.prefix }}${{ github.run_id }}
+          restore-keys: ${{ steps.ccache.outputs.prefix }}
+
+      - name: Print Configuration Summary
+        run: |
+          echo "===================================================="
+          echo " COMPILED CONFIGURATION SUMMARY"
+          echo "===================================================="
+          grep -E '^CONFIG_TARGET_qualcommax' .config || true
+          echo "Total active packages: $(grep -c '=y$' .config)"
+          echo "Full .config will be saved to bin/targets/${{ env.TARGET }}/config.txt"
+          echo "===================================================="
+
+      - name: Include Custom Files
+        run: |
+          if [ -d "custom_repo/${{ env.CUSTOM_FILES_PATH }}" ]; then
+            echo "Copying custom files from custom_repo/${{ env.CUSTOM_FILES_PATH }}..."
+            mkdir -p files
+            cp -r custom_repo/${{ env.CUSTOM_FILES_PATH }}/. files/
+          else
+            echo "No custom files directory found at custom_repo/${{ env.CUSTOM_FILES_PATH }}; skipping."
+          fi
+
+      - name: Cache OpenWrt download pool (dl/)
+        uses: actions/cache@v6
+        with:
+          path: dl
+          key: dl-${{ hashFiles('feeds.conf.default', 'custom_repo/mx4300-ppe.config') }}-${{ github.run_id }}
+          restore-keys: |
+            dl-${{ hashFiles('feeds.conf.default', 'custom_repo/mx4300-ppe.config') }}-
+            dl-
+
+      - name: Download Dependencies
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            make -j$(($(nproc)+1)) V=sc download && break
+            echo "Download attempt $attempt failed; retrying..."
+            sleep 5
+          done
+
+      - name: Prepare Dependencies
+        run: |
+          set -euo pipefail
+          make -j$(($(nproc)+1)) V=sc prepare
+
+      - name: Build Firmware
+        env:
+          CCACHE_COMPILERCHECK: content
+          CCACHE_MAXSIZE: 4G
+        run: |
+          set -euo pipefail
+          if ! make -j$(($(nproc)+1)) V=sc world; then
+            echo "::warning::Parallel build failed; retrying single-threaded for diagnostics"
+            make -j1 V=sc world
+          fi
+          if [ -x "staging_dir/host/bin/ccache" ]; then
+            echo "===================================================="
+            echo " CCACHE STATS"
+            echo "===================================================="
+            staging_dir/host/bin/ccache -s
+            echo "===================================================="
+          fi
+
+      - name: Organize Artifacts
+        run: |
+          cp .config bin/targets/${{ env.TARGET }}/config.txt
+          tree bin/targets/${{ env.TARGET }} > bin/targets/${{ env.TARGET }}/file_list.txt
+          rm -rf bin/targets/${{ env.TARGET }}/packages
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: firmware-images
+          path: bin/targets/${{ env.TARGET }}/
+
+  release:
+    name: Create a New Release
+    needs: [build, check_commits]
+    if: needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: firmware-images
+          path: firmware
+
+      - name: Display File Structure
+        run: ls -R firmware
+
+      - name: Generate Date and Release Identifiers
+        run: |
+          DATE_STR=$(date +%F)
+          echo "RELEASE_DATE=$DATE_STR" >> "$GITHUB_ENV"
+          echo "RELEASE_TAG=${DATE_STR}-run-${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
+
+      - name: Generate Release Notes
+        run: |
+          cat <<EOF > release_notes.md
+          Build Commit: ${{ needs.check_commits.outputs.latest_commit_sha }}
+          NSS Packages Commit: ${{ needs.check_commits.outputs.nss_packages_repo_latest_commit_sha }}
+          Config Commit: ${{ needs.check_commits.outputs.config_commit_sha }}
+          EOF
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: firmware/*
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: PPE-NSS Images ${{ env.RELEASE_DATE }}
+          body_path: release_notes.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean Up Old Releases
+        uses: dev-drprasad/delete-older-releases@master
+        with:
+          keep_latest: ${{ env.KEEP }}
+          delete_tags: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
