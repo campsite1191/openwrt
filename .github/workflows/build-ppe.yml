@@ -102,7 +102,7 @@ jobs:
 
       - name: Apply Temporary Patch
         run: |
-          curl -sL -o - https://patch-diff.githubusercontent.com/raw/openwrt/openwrt/pull/19071.patch | git apply - || true
+          curl -fsSL --retry 3 -o - https://github.com/openwrt/openwrt/pull/19071.patch | git apply - || true
 
       - name: Checkout Current Repository
         uses: actions/checkout@v7
@@ -168,20 +168,19 @@ jobs:
       - name: Download Official Ookla Speedtest Binary
         run: |
           mkdir -p custom_repo/files/usr/bin
-          curl -sL https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-aarch64.tgz | tar xz -C custom_repo/files/usr/bin speedtest
+          curl -fsSL --retry 3 https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-aarch64.tgz | tar xz -C custom_repo/files/usr/bin speedtest
           chmod +x custom_repo/files/usr/bin/speedtest
 
       - name: Enable ARM64 Kernel Crypto Extensions
         run: |
           cat << 'EOF' >> target/linux/qualcommax/config-6.18
-          CONFIG_ARM64_CRYPTO=y
           CONFIG_CRYPTO_AES_ARM64_CE=y
           CONFIG_CRYPTO_AES_ARM64_CE_BLK=y
           CONFIG_CRYPTO_AES_ARM64_CE_CCM=y
           CONFIG_CRYPTO_GHASH_ARM64_CE=y
           CONFIG_CRYPTO_SHA1_ARM64_CE=y
           CONFIG_CRYPTO_SHA2_ARM64_CE=y
-          CONFIG_CRYPTO_CRC32_ARM64_CE=y
+          CONFIG_CRC32_ARCH=y
           EOF
 
       - name: Configure Firmware Image
@@ -230,6 +229,20 @@ jobs:
             ERRORS=$((ERRORS + 1))
           else
             echo " [OK] Ookla speedtest binary present and executable"
+          fi
+
+          if [ ! -f "package/feeds/packages/smartdns/Makefile" ]; then
+            echo "::error::[FEED SYMLINK FAILURE] smartdns/Makefile not found in package/feeds/packages/"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo " [OK] smartdns package registered in feeds"
+          fi
+
+          if [ ! -f "package/feeds/luci/luci-app-smartdns/Makefile" ]; then
+            echo "::error::[FEED SYMLINK FAILURE] luci-app-smartdns/Makefile not found in package/feeds/luci/"
+            ERRORS=$((ERRORS + 1))
+          else
+            echo " [OK] luci-app-smartdns package registered in feeds"
           fi
 
           # 2. ESSENTIAL SYMBOLS INTEGRITY CHECK
@@ -432,7 +445,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Clean Up Old Releases
-        uses: dev-drprasad/delete-older-releases@master
+        uses: dev-drprasad/delete-older-releases@v0.3.4
         with:
           keep_latest: ${{ env.KEEP }}
           delete_tags: true
