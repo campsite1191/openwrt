@@ -98,11 +98,22 @@ jobs:
         with:
           fetch-depth: 1
           repository: ${{ env.UPSTREAM_REPO }}
-          ref: ${{ env.UPSTREAM_REF }}
+          ref: ${{ needs.check_commits.outputs.latest_commit_sha }}
 
       - name: Apply Temporary Patch
         run: |
-          curl -fsSL --retry 3 -o - https://github.com/openwrt/openwrt/pull/19071.patch | git apply - || true
+          set -euo pipefail
+          curl -fsSL --retry 3 https://github.com/openwrt/openwrt/pull/19071.patch -o /tmp/19071.patch
+          if patch -p1 --dry-run --forward </tmp/19071.patch >/dev/null 2>&1; then
+            echo "Applying OpenWrt PR #19071 (OpenSSL QUIC/KTLS)..."
+            patch -p1 --forward </tmp/19071.patch
+          elif patch -p1 --dry-run --reverse </tmp/19071.patch >/dev/null 2>&1; then
+            echo "Skipping OpenWrt PR #19071 (already applied upstream)"
+          else
+            echo "::error::OpenWrt PR #19071 patch does not apply cleanly to the tree"
+            exit 1
+          fi
+          rm -f /tmp/19071.patch
 
       - name: Checkout Current Repository
         uses: actions/checkout@v7
@@ -140,7 +151,18 @@ jobs:
 
       - name: Apply Hardware PPE-QoS SQM Backend Patch
         run: |
-          curl -fsSL --retry 3 "https://raw.githubusercontent.com/JuliusBairaktaris/Qualcommax_NSS_Builder/main/patches/feeds/ppe-nss/packages/0001-sqm-scripts-pin-the-fork-that-carries-hw_ppe.patch" | patch -d feeds/packages -p1 -N -r - || true
+          set -euo pipefail
+          curl -fsSL --retry 3 "https://raw.githubusercontent.com/JuliusBairaktaris/Qualcommax_NSS_Builder/main/patches/feeds/ppe-nss/packages/0001-sqm-scripts-pin-the-fork-that-carries-hw_ppe.patch" -o /tmp/hw_ppe.patch
+          if patch -p1 -d feeds/packages --dry-run --forward </tmp/hw_ppe.patch >/dev/null 2>&1; then
+            echo "Applying sqm-scripts hw_ppe fork patch..."
+            patch -p1 -d feeds/packages --forward </tmp/hw_ppe.patch
+          elif patch -p1 -d feeds/packages --dry-run --reverse </tmp/hw_ppe.patch >/dev/null 2>&1; then
+            echo "Skipping sqm-scripts hw_ppe fork patch (already applied)"
+          else
+            echo "::error::sqm-scripts hw_ppe fork patch does not apply cleanly to feeds/packages"
+            exit 1
+          fi
+          rm -f /tmp/hw_ppe.patch
 
       - name: Fetch SmartDNS and LuCI App
         run: |
@@ -260,12 +282,18 @@ jobs:
             fi
           done
 
-          echo "--> Logging any symbols normalized or pruned by defconfig..."
+          echo "--> Verifying defconfig kept all requested symbols..."
+          DROPPED=0
           while IFS= read -r req; do
             if ! grep -qxF "$req" .config; then
-              echo "::notice::[DEFCONFIG NORMALIZED] Symbol omitted by defconfig: $req"
+              echo "::error::[DEFCONFIG DROPPED] Requested symbol omitted by defconfig: $req"
+              DROPPED=$((DROPPED + 1))
+              ERRORS=$((ERRORS + 1))
             fi
           done < <(grep -E '^CONFIG_[A-Za-z0-9_-]+=' .config.orig | awk -F= '{ last[$1] = $0 } END { for (s in last) print last[s] }' | grep -vE '=n$')
+          if [ "$DROPPED" -eq 0 ]; then
+            echo " [OK] All requested symbols in mx4300-ppe.config retained by defconfig"
+          fi
 
           # 3. FORBIDDEN MBEDTLS & POLLUTING SYMBOLS (.config)
           echo "--> Auditing forbidden/polluting symbols in .config..."
