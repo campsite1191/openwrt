@@ -381,7 +381,7 @@ jobs:
           before=$(find dl -maxdepth 1 -type f 2>/dev/null | wc -l || echo 0)
           success=0
           for attempt in 1 2 3; do
-            if make -j$(($(nproc)+1)) V=sc download; then
+            if make -j$(nproc) V=sc download; then
               success=1
               break
             fi
@@ -409,7 +409,7 @@ jobs:
           CCACHE_BASEDIR: ${{ github.workspace }}
         run: |
           set -euo pipefail
-          if ! make -j$(($(nproc)+1)) V=sc world; then
+          if ! make -j$(nproc) V=sc world; then
             echo "::warning::Parallel build failed; retrying single-threaded for diagnostics"
             make -j1 V=sc world
           fi
