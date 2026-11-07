@@ -140,15 +140,7 @@ jobs:
 
       - name: Apply Hardware PPE-QoS SQM Backend Patch
         run: |
-          git clone --depth 1 --filter=blob:none --sparse https://github.com/JuliusBairaktaris/Qualcommax_NSS_Builder.git /tmp/builder-feeds
-          git -C /tmp/builder-feeds sparse-checkout set patches/feeds
-          find /tmp/builder-feeds/patches/feeds -name "*.patch" | while read -r patch_file; do
-            if grep -q "hw_ppe.qos" "$patch_file" || [[ "$patch_file" == *"packages"* ]]; then
-              echo "Applying packages patch: $(basename "$patch_file")"
-              patch -d feeds/packages -p1 -N -r - < "$patch_file" || true
-            fi
-          done
-          rm -rf /tmp/builder-feeds
+          curl -fsSL --retry 3 "https://raw.githubusercontent.com/JuliusBairaktaris/Qualcommax_NSS_Builder/main/patches/feeds/ppe-nss/packages/0001-sqm-scripts-pin-the-fork-that-carries-hw_ppe.patch" | patch -d feeds/packages -p1 -N -r - || true
 
       - name: Fetch SmartDNS and LuCI App
         run: |
