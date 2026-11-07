@@ -26,7 +26,7 @@ Based on upstream work by [JuliusBairaktaris/openwrt-ppe-nss](https://github.com
 * **VPN**: Full **AmneziaWG** integration (`kmod-amneziawg`, `amneziawg-tools`, `luci-proto-amneziawg`) alongside standard WireGuard.
 * **DNS & Routing**: **SmartDNS** (`smartdns`, `luci-app-smartdns`), `dnsmasq-full`, `ip-full`, and Policy Based Routing (`luci-app-pbr`).
 * **Time Sync**: `chrony-nts` with Network Time Security enabled.
-* **Network & System Tools**: BBR TCP congestion control (`kmod-tcp-bbr`), official Ookla Speedtest ARM64 CLI (`speedtest`), `iperf3`, `curl` (threaded resolver), `tcpdump`, `bind-dig` (`dig`), `bind-host` (`host`), `conntrack`, `btop`, `ttyd` web terminal (`luci-app-ttyd`), `qrencode`, and `rsync`.
+* **Network & System Tools**: BBR TCP congestion control (`kmod-tcp-bbr`), official Ookla Speedtest ARM64 CLI (`speedtest`), `iperf3`, `curl` (threaded resolver), `tcpdump`, `bind-dig` (`dig`), `bind-host` (`host`), `conntrack`, `btop`, `ttyd` web terminal (`luci-app-ttyd`), and `rsync`.
 * **Storage**: USB 3.0 storage (`block-mount`, `kmod-usb-storage`, `kmod-usb-storage-uas`) with VFAT, exFAT, and NTFS3 (`kmod-fs-vfat`, `kmod-fs-exfat`, `kmod-fs-ntfs3`) support.
 
 ---
