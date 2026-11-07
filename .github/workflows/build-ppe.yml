@@ -404,6 +404,7 @@ jobs:
         with:
           name: firmware-images
           path: bin/targets/${{ env.TARGET }}/
+          retention-days: 1
 
   release:
     name: Create a New Release
