@@ -182,6 +182,17 @@ jobs:
           curl -sL https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-aarch64.tgz | tar xz -C custom_repo/files/usr/bin speedtest
           chmod +x custom_repo/files/usr/bin/speedtest
 
+      - name: Enable ARM64 Kernel Crypto Extensions
+        run: |
+          cat << 'EOF' >> target/linux/qualcommax/config-6.18
+          CONFIG_ARM64_CRYPTO=y
+          CONFIG_CRYPTO_AES_ARM64_CE=y
+          CONFIG_CRYPTO_AES_ARM64_CE_BLK=y
+          CONFIG_CRYPTO_AES_ARM64_CE_CCM=y
+          CONFIG_CRYPTO_GHASH_ARM64_CE=y
+          CONFIG_CRYPTO_CRC32_ARM64_CE=y
+          EOF
+
       - name: Configure Firmware Image
         run: |
           cp custom_repo/mx4300-ppe.config .config.orig
