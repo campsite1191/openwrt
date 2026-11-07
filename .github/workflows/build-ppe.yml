@@ -300,7 +300,7 @@ jobs:
           FORBIDDEN_SYMBOLS=(
             "CONFIG_FEED_nss=y"
             "CONFIG_FEED_amnezia=y"
-            "CONFIG_PACKAGE_tc=y"
+            "CONFIG_PACKAGE_tc-full=y"
             "CONFIG_PACKAGE_wpad-basic-mbedtls=y"
             "CONFIG_PACKAGE_apk-mbedtls=y"
             "CONFIG_PACKAGE_libustream-mbedtls=y"
