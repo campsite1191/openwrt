@@ -150,24 +150,13 @@ jobs:
           done
           rm -rf /tmp/builder-feeds
 
-      - name: Update and Add SmartDNS Package
+      - name: Fetch SmartDNS and LuCI App
         run: |
-          LATEST_COMMIT=$(git ls-remote https://github.com/pymumu/smartdns.git refs/heads/master | cut -f1)
-          [ -z "$LATEST_COMMIT" ] && { echo "Failed to fetch SmartDNS commit hash"; exit 1; }
-          curl -fsSL https://raw.githubusercontent.com/pymumu/smartdns/master/package/openwrt/Makefile -o feeds/packages/net/smartdns/Makefile
-          sed -i -E "s/^(PKG_SOURCE_VERSION:=).*/\1$LATEST_COMMIT/" feeds/packages/net/smartdns/Makefile
-          sed -i "s/MIRROR_HASH:=.*/MIRROR_HASH:=skip/" feeds/packages/net/smartdns/Makefile       
-          sed -i 's/DEPENDS:=+libpthread/DEPENDS:=+zlib +libpthread/' feeds/packages/net/smartdns/Makefile
-
-      - name: Update SmartDNS LuCI File
-        run: |
-          REPO_NAME="luci-app-smartdns"
-          TARGET_DIR="$(pwd)/feeds/luci/applications/${REPO_NAME}"
-          DOWNLOAD_URL="https://github.com/pymumu/${REPO_NAME}/archive/master.tar.gz"
-          
-          rm -rf "${TARGET_DIR}"
-          mkdir -p "${TARGET_DIR}"
-          curl -sL "${DOWNLOAD_URL}" | tar -xz -C "${TARGET_DIR}" --strip-components=1
+          rm -rf feeds/packages/net/smartdns feeds/luci/applications/luci-app-smartdns
+          git clone --depth 1 https://github.com/pymumu/openwrt-smartdns.git feeds/packages/net/smartdns
+          git clone --depth 1 https://github.com/pymumu/luci-app-smartdns.git feeds/luci/applications/luci-app-smartdns
+          rm -rf feeds/packages/net/smartdns/.git feeds/luci/applications/luci-app-smartdns/.git
+          ./scripts/feeds update -i packages luci
 
       - name: Install Feeds
         run: |
