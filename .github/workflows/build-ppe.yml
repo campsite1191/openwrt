@@ -336,8 +336,8 @@ jobs:
             echo "No custom files directory found at custom_repo/${{ env.CUSTOM_FILES_PATH }}; skipping."
           fi
 
-      - name: Cache OpenWrt download pool (dl/)
-        uses: actions/cache@v6
+      - name: Restore OpenWrt download pool (dl/)
+        uses: actions/cache/restore@v6
         with:
           path: dl
           key: dl-${{ hashFiles('feeds.conf.default', 'custom_repo/mx4300-ppe.config') }}-${{ github.run_id }}
@@ -346,8 +346,11 @@ jobs:
             dl-
 
       - name: Download Dependencies
+        id: download
         run: |
           set -euo pipefail
+          mkdir -p dl
+          before=$(find dl -maxdepth 1 -type f 2>/dev/null | wc -l || echo 0)
           success=0
           for attempt in 1 2 3; do
             if make -j$(($(nproc)+1)) V=sc download; then
@@ -358,16 +361,24 @@ jobs:
             sleep 5
           done
           [ "$success" -eq 1 ] || { echo "::error::All download attempts failed"; exit 1; }
+          after=$(find dl -maxdepth 1 -type f | wc -l)
+          echo "grew=$([ "$after" -gt "$before" ] && echo 1 || echo 0)" >> "$GITHUB_OUTPUT"
 
-      - name: Prepare Dependencies
-        run: |
-          set -euo pipefail
-          make -j$(($(nproc)+1)) V=sc prepare
+      - name: Save OpenWrt download pool (dl/)
+        if: steps.download.outputs.grew == '1'
+        uses: actions/cache/save@v6
+        with:
+          path: dl
+          key: dl-${{ hashFiles('feeds.conf.default', 'custom_repo/mx4300-ppe.config') }}-${{ github.run_id }}
 
       - name: Build Firmware
         env:
           CCACHE_COMPILERCHECK: content
-          CCACHE_MAXSIZE: 4G
+          CCACHE_COMPRESS: "1"
+          CCACHE_COMPRESSLEVEL: "3"
+          CCACHE_MAXSIZE: "7G"
+          CCACHE_SLOPPINESS: include_file_ctime,include_file_mtime,time_macros
+          CCACHE_BASEDIR: ${{ github.workspace }}
         run: |
           set -euo pipefail
           if ! make -j$(($(nproc)+1)) V=sc world; then
