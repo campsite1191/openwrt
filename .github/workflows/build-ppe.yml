@@ -136,6 +136,8 @@ jobs:
 
       - name: Add Custom Feeds
         run: |
+          sed -i '/telephony/d' feeds.conf.default || true
+          sed -i '/video/d' feeds.conf.default || true
           printf "\n%s\n" "${{ env.FEEDS }}" >> feeds.conf.default
 
       - name: Update Feeds
@@ -207,6 +209,7 @@ jobs:
           sed -i 's/^CONFIG_FEED_nss=.*/# CONFIG_FEED_nss is not set/' .config || true
           sed -i 's/^CONFIG_FEED_amnezia=.*/# CONFIG_FEED_amnezia is not set/' .config || true
           sed -i 's/^CONFIG_FEED_zapret2=.*/# CONFIG_FEED_zapret2 is not set/' .config || true
+          sed -i '/export CCACHE_NOCOMPRESS/d' rules.mk || true
 
       - name: Pre-Flight Fail-Fast Assertion Audit
         run: |
@@ -350,6 +353,12 @@ jobs:
           } | sha256sum | cut -c1-16)
           echo "prefix=ccache-${{ env.TARGET }}-$sum-" >> "$GITHUB_OUTPUT"
 
+      - name: Mount RAM Disk for ccache
+        run: |
+          mkdir -p .ccache
+          sudo mount -t tmpfs -o size=6G tmpfs .ccache
+          df -h .ccache
+
       - name: Restore ccache
         uses: actions/cache@v6
         with:
@@ -416,13 +425,13 @@ jobs:
         env:
           CCACHE_COMPILERCHECK: content
           CCACHE_COMPRESS: "1"
-          CCACHE_COMPRESSLEVEL: "3"
-          CCACHE_MAXSIZE: "7G"
-          CCACHE_SLOPPINESS: include_file_ctime,include_file_mtime,time_macros
+          CCACHE_COMPRESSLEVEL: "1"
+          CCACHE_MAXSIZE: "6G"
+          CCACHE_SLOPPINESS: include_file_ctime,include_file_mtime,time_macros,file_macro,locale
           CCACHE_BASEDIR: ${{ github.workspace }}
         run: |
           set -euo pipefail
-          if ! make -j$(nproc) V=sc world; then
+          if ! make -j$(nproc) BUILD_LOG=1 world; then
             echo "::warning::Parallel build failed; retrying single-threaded for diagnostics"
             make -j1 V=sc world
           fi
