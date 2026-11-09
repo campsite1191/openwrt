@@ -80,18 +80,19 @@ jobs:
     steps:
       - name: Free up disk space
         run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/share/boost
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /var/lib/docker
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo rm -rf /usr/share/dotnet &
+          sudo rm -rf /opt/ghc &
+          sudo rm -rf /usr/local/share/boost &
+          sudo rm -rf /usr/local/lib/android &
+          sudo rm -rf /var/lib/docker &
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY" &
+          wait
           df -h
 
       - name: Install Build Dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev file wget mold tree ccache
+          sudo apt install -y build-essential clang llvm lld flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev file wget mold tree ccache
 
       - name: Checkout Remote Repository
         uses: actions/checkout@v7
@@ -134,6 +135,8 @@ jobs:
 
       - name: Add Custom Feeds
         run: |
+          sed -i '/telephony/d' feeds.conf.default || true
+          sed -i '/video/d' feeds.conf.default || true
           printf "\n%s\n" "${{ env.FEEDS }}" >> feeds.conf.default
 
       - name: Update Feeds
@@ -204,6 +207,7 @@ jobs:
           make defconfig V=s
           sed -i 's/^CONFIG_FEED_nss=.*/# CONFIG_FEED_nss is not set/' .config || true
           sed -i 's/^CONFIG_FEED_amnezia=.*/# CONFIG_FEED_amnezia is not set/' .config || true
+          sed -i '/export CCACHE_NOCOMPRESS/d' rules.mk || true
 
       - name: Pre-Flight Fail-Fast Assertion Audit
         run: |
@@ -337,6 +341,12 @@ jobs:
           } | sha256sum | cut -c1-16)
           echo "prefix=ccache-${{ env.TARGET }}-$sum-" >> "$GITHUB_OUTPUT"
 
+      - name: Mount RAM Disk for ccache
+        run: |
+          mkdir -p .ccache
+          sudo mount -t tmpfs -o size=6G tmpfs .ccache
+          df -h .ccache
+
       - name: Restore ccache
         uses: actions/cache@v6
         with:
@@ -403,13 +413,13 @@ jobs:
         env:
           CCACHE_COMPILERCHECK: content
           CCACHE_COMPRESS: "1"
-          CCACHE_COMPRESSLEVEL: "3"
-          CCACHE_MAXSIZE: "7G"
-          CCACHE_SLOPPINESS: include_file_ctime,include_file_mtime,time_macros
+          CCACHE_COMPRESSLEVEL: "1"
+          CCACHE_MAXSIZE: "6G"
+          CCACHE_SLOPPINESS: include_file_ctime,include_file_mtime,time_macros,file_macro,locale
           CCACHE_BASEDIR: ${{ github.workspace }}
         run: |
           set -euo pipefail
-          if ! make -j$(nproc) V=sc world; then
+          if ! make -j$(nproc) BUILD_LOG=1 world; then
             echo "::warning::Parallel build failed; retrying single-threaded for diagnostics"
             make -j1 V=sc world
           fi
