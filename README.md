@@ -24,6 +24,7 @@ Based on upstream work by [JuliusBairaktaris/openwrt-ppe-nss](https://github.com
 * **Security & Hardening**: Strong stack protector, ASLR PIE, Format Security, Fortify Source 3, Full RELRO, and Seccomp.
 * **Pure OpenSSL Stack**: `mbedtls` completely excluded in favor of `wpad-openssl`, `apk-openssl`, and `libustream-openssl`.
 * **VPN**: Full **AmneziaWG** integration (`kmod-amneziawg`, `amneziawg-tools`, `luci-proto-amneziawg`) alongside standard WireGuard.
+* **Anti-DPI**: **Zapret2** integration (`zapret2`, `luci-app-zapret2`) from [1andrevich/zapret2-openwrt](https://github.com/1andrevich/zapret2-openwrt) for packet-level DPI circumvention via `nfqws2`.
 * **DNS & Routing**: **SmartDNS** (`smartdns`, `luci-app-smartdns`), `dnsmasq-full`, `ip-full`, and Policy Based Routing (`luci-app-pbr`).
 * **Time Sync**: `chrony-nts` with Network Time Security enabled.
 * **Network & System Tools**: BBR TCP congestion control (`kmod-tcp-bbr`), official Ookla Speedtest ARM64 CLI (`speedtest`), `iperf3`, `curl` (threaded resolver), `tcpdump`, `bind-dig` (`dig`), `bind-host` (`host`), `conntrack`, `btop`, `ttyd` web terminal (`luci-app-ttyd`), and `rsync`.
