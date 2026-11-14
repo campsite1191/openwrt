@@ -201,7 +201,7 @@ jobs:
           [ -f "$CFG" ]
           [ -z "$(tail -c 1 "$CFG")" ] || echo "" >> "$CFG"
 
-          PATTERN='^(# )?CONFIG_(CRYPTO_(AES|GHASH)_ARM64_CE(_BLK|_CCM)?|KERNEL_MODE_NEON|CRYPTO_(SHA1|SHA256|CHACHA20|POLY1305)|HW_RANDOM_IPQ_RNG|CRYPTO_DEV_QCE|RPS|XPS|RFS_ACCEL|BPF_JIT(_ALWAYS_ON)?|ARM64_LSE_ATOMICS|ARM64_SW_TTBR0_PAN|ARM_PMUV3|HW_PERF_EVENTS|ARM64_ERRATUM_8(43419|35769|32075|45719)|ARM64_(PTR_AUTH|BTI|SVE|MTE|AMU_EXTN|RAS_EXTN)|PREEMPT_NONE)(=| is not set)'
+          PATTERN='^(# )?CONFIG_(CRYPTO_(AES|GHASH)_ARM64_CE(_BLK|_CCM)?|KERNEL_MODE_NEON|CRYPTO_(SHA1|SHA256|CHACHA20|POLY1305)|HW_RANDOM_IPQ_RNG|CRYPTO_DEV_(QCE|QCOM_RNG)|RPS|XPS|RFS_ACCEL|BPF_JIT(_ALWAYS_ON)?|ARM64_LSE_ATOMICS|ARM64_SW_TTBR0_PAN|ARM_PMUV3|HW_PERF_EVENTS|ARM64_ERRATUM_8(43419|35769|32075|45719)|ARM64_(PTR_AUTH|BTI|SVE|MTE|AMU_EXTN|RAS_EXTN)|PREEMPT_NONE)(=| is not set)'
 
           echo "=== BEFORE (generic + qualcommax fragments) ==="
           for f in "$GEN_CFG" "$CFG" "$SUB_CFG"; do
@@ -239,19 +239,20 @@ jobs:
           set_kcfg CONFIG_BPF_JIT_ALWAYS_ON y
           set_kcfg CONFIG_PREEMPT_NONE y
 
-          # 4. Cortex-A53 Architecture, Profiling Counters & Mandatory Silicon Errata
+          # 4. Cortex-A53 Architecture & r0p4 Mandatory Silicon Errata
           set_kcfg CONFIG_ARM64_LSE_ATOMICS y
-          set_kcfg CONFIG_ARM_PMUV3 y
-          set_kcfg CONFIG_HW_PERF_EVENTS y
           set_kcfg CONFIG_ARM64_ERRATUM_843419 y
           set_kcfg CONFIG_ARM64_ERRATUM_835769 y
-          set_kcfg CONFIG_ARM64_ERRATUM_832075 y
           set_kcfg CONFIG_ARM64_ERRATUM_845719 y
 
           # 5. Drop TTBR0 Page-Table Switching Overhead & Unused SoC / ARMv8.2–v9 Features
           set_kcfg CONFIG_ARM64_SW_TTBR0_PAN n
           set_kcfg CONFIG_HW_RANDOM_IPQ_RNG n
           set_kcfg CONFIG_CRYPTO_DEV_QCE n
+          set_kcfg CONFIG_CRYPTO_DEV_QCOM_RNG n
+          set_kcfg CONFIG_ARM_PMUV3 n
+          set_kcfg CONFIG_HW_PERF_EVENTS n
+          set_kcfg CONFIG_ARM64_ERRATUM_832075 n
           set_kcfg CONFIG_ARM64_PTR_AUTH n
           set_kcfg CONFIG_ARM64_BTI n
           set_kcfg CONFIG_ARM64_SVE n
